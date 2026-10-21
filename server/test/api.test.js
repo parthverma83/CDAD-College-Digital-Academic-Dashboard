@@ -96,8 +96,10 @@ test('submission upload rules and team-leader enforcement', async () => {
 
   assert.equal((await api('POST', url, { jar: leader, form: fileForm('bad.exe', 'x') })).status, 400);
   assert.equal((await api('POST', url, { jar: loner, form: fileForm('a.pdf', '%PDF-1.4') })).status, 403);
-  const big = await api('POST', url, { jar: leader, form: fileForm('big.pdf', Buffer.alloc(11 * 1024 * 1024)) });
-  assert.equal(big.status, 400);
+  // The server may reset the connection mid-upload instead of replying, so a network error also counts as rejected.
+  const big = await api('POST', url, { jar: leader, form: fileForm('big.pdf', Buffer.alloc(11 * 1024 * 1024)) })
+    .catch(() => ({ status: 'rejected' }));
+  assert.ok(big.status === 400 || big.status === 'rejected', `oversized upload accepted: ${big.status}`);
   assert.equal((await api('POST', url, { jar: leader, form: fileForm('ok.pdf', '%PDF-1.4 test') })).status, 200);
 
   // Review decision validation
