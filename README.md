@@ -352,3 +352,5 @@ docker rm -f cdad-container
 docker volume rm cdad-data
 docker run -d -p 3000:3000 -v cdad-data:/app/server/data --name cdad-container cdad
 ```
+#   - C o l l e g e _ D i g i t a l _ A c a d e m i c _ D a s h b o a r d  
+ 
