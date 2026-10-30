@@ -20,7 +20,7 @@ in plaintext.
 
 - HTML5, CSS3, Vanilla JavaScript on the frontend (no frameworks, no build step)
 - Node.js + Express REST API (`backend/`), static website in `frontend/`
-- SQLite (via Node's built-in `node:sqlite`) as the only data store — requires Node 22+ (the Dockerfile uses `node:22-alpine`)
+- SQLite (via Node's built-in `node:sqlite`) as the only data store — requires Node 22.5+ (the Dockerfile uses `node:22-alpine`)
 - `bcryptjs` for password hashing, HttpOnly session cookies for auth
 - Docker (single Node container, no separate reverse proxy needed)
 
@@ -38,8 +38,7 @@ The `-v cdad-data:/app/server/data` volume is what makes the SQLite database
 survive beyond the container itself — without it, removing the container
 (`docker rm`, not just `docker stop`) wipes all data and the next run starts
 from a fresh seed. With the volume, `docker rm` + `docker run` again reuses
-the same data (confirmed: the server logs "Already seeded" instead of
-reseeding).
+the same data (the server logs "Already seeded" instead of reseeding).
 
 To stop/remove (data is preserved in the volume either way):
 
@@ -145,10 +144,10 @@ The app walks a brand-new student through setup automatically:
 ### Submissions
 - Dedicated **Submission** tab for students: submit a link, attach a file
   (PDF, PPT/PPTX, CSV, or DOC/DOCX, max 10MB), and/or a note for faculty to
-  review — at least a link or a file is required, not both. Resubmit any
-  time before approval; a resubmission that doesn't attach a new file
-  keeps whatever file was already on record. Faculty can download the
-  attached file directly from the Review modal or the Submissions Hub.
+  review — at least one of a link or a file is required (both is fine).
+  Resubmit any time before approval; a resubmission that doesn't attach a
+  new file keeps whatever file was already on record. Faculty can download
+  the attached file directly from the Review modal or the Submissions Hub.
 - **Faculty can request a submission** from a group, optionally with a
   **due date/time** — this is stored on the project and shown to students
   before they submit.
