@@ -1,0 +1,16 @@
+{
+  "name": "cdad",
+  "version": "1.0.0",
+  "private": true,
+  "description": "CDAD — College Digital Academic Dashboard. Convenience scripts for the backend/ + frontend/ project; the app itself lives in backend/ (API + SQLite) and frontend/ (static site).",
+  "scripts": {
+    "install:backend": "npm --prefix backend install",
+    "start": "npm --prefix backend start",
+    "dev": "npm --prefix backend run dev",
+    "seed": "npm --prefix backend run seed",
+    "test": "npm --prefix backend test"
+  },
+  "engines": {
+    "node": ">=22.5.0"
+  }
+}

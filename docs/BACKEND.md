@@ -1,0 +1,237 @@
+# Backend Migration — What Changed & How to Run It
+
+This branch replaces CDAD's old LocalStorage-only frontend with a real
+backend: a Node/Express REST API backed by SQLite. If you're pulling this
+branch to try it out, this doc is the one to read — `README.md` has also
+been updated for the new setup, but this is the shorter "what changed and
+how do I run it" version.
+
+## Why
+
+The old app stored everything in the browser's LocalStorage. That meant:
+- Two people on two different devices each saw an empty, independent copy
+  of the app — nothing was actually shared.
+- Passwords were stored and checked in **plaintext**, readable by anyone
+  via browser DevTools.
+
+Neither of those is acceptable for something meant to be used by a real
+class, so this branch adds a proper backend.
+
+## What changed
+
+- **New `backend/` folder** (originally `server/`; now split from the static `frontend/` folder): a Node/Express app with a SQLite database
+  (`backend/src/db.js`), one route file per resource (`backend/src/routes/*.js`), a
+  seed script (`backend/src/seed.js`) with the same demo roster as before, and
+  session-cookie-based auth (`backend/src/lib/sessions.js`) with bcrypt-hashed
+  passwords.
+- **Every frontend JS file was updated** to call the new API instead of
+  `localStorage` — but the six helper function names in `js/core/storage.js`
+  (`getData`, `addData`, `updateData`, `deleteData`, `findData`, `saveData`)
+  stayed the same, so the overall structure of the app didn't change, just
+  how it talks to the data layer.
+- **`js/data.js` is gone** — seeding now happens server-side once, in
+  `backend/src/seed.js`, instead of re-running in every browser tab.
+- **Live updates are now polling-based** (every 15 seconds, and
+  immediately when you switch back to the tab) instead of the old
+  same-browser-only LocalStorage event. A change someone else makes may
+  take a few seconds to show up for you — that's expected, not a bug.
+- **Dockerfile updated** to run the new Node server instead of a static
+  nginx container (see "Running with Docker" below).
+- **New: self-service "Forgot Password"** on the login page (it was a
+  dead link before): enter your ID + the email on file + solve an image
+  captcha + a new password. The captcha is a server-generated SVG drawn
+  from bitmap glyphs (no <text> in the markup), single-use, expires in 5
+  minutes. No email setup is needed.
+- **New: file attachments on the Submission tab.** Students can now
+  attach a PDF, PPT/PPTX, CSV, or DOC/DOCX file (max 10MB) alongside or
+  instead of a link. Files live under `backend/data/uploads/` — already
+  covered by the existing Docker volume, no extra setup needed. Faculty
+  can download the attached file from the Review modal or the
+  Submissions Hub.
+- **New: only a group's team leader can submit a project** (server
+  enforces this; everyone else still sees the submission's status).
+  Faculty's Submissions Hub now groups entries under a day header,
+  newest day first.
+
+Nothing else about the UI or workflows changed — group creation/joining,
+marks, notifications, etc. all work exactly the same from a user's point
+of view. Login credentials are unchanged too (`FAC001` / `faculty123`,
+`ADT24SOCB0001` / `PASS123`, etc.).
+
+Two small behavior fixes came along with the migration (not new features,
+just bugs the old version had):
+- Group-targeted notifications (e.g. "Presentation Scheduled") now
+  actually show up for students in that group — the old code only ever
+  matched `all-students` or your exact ID, so group notifications were
+  silently invisible before.
+- Deleting a student who led a group now correctly promotes another
+  member to leader, instead of leaving the group leaderless.
+
+## Getting the code
+
+```bash
+git fetch origin
+git checkout backend-migration
+git pull
+```
+
+(If you don't have the repo cloned yet: `git clone
+https://github.com/Prathamesh13-n/CBAD-project.git && cd CBAD-project &&
+git checkout backend-migration`)
+
+## How to run it
+
+### Option A — Docker (recommended, avoids Node version issues)
+
+The database driver (`node:sqlite`) needs **Node 22 or newer**. If you're
+not sure what Node version you have installed, Docker sidesteps the
+question entirely — the container always uses the right version.
+
+```bash
+docker build -t cdad .
+docker volume create cdad-data
+docker run -d -p 3000:3000 -v cdad-data:/app/server/data --name cdad-container cdad
+```
+
+Open **http://localhost:3000**.
+
+If port 3000 is already taken on your machine, map a different host port,
+e.g. `-p 4000:3000`, and open that port instead.
+
+To stop it: `docker stop cdad-container`. To remove it (data stays safe in
+the `cdad-data` volume): `docker rm cdad-container`.
+
+### Option B — Plain Node (no Docker)
+
+Check your Node version first:
+
+```bash
+node --version
+```
+
+If it's below `v22.5.0`, either install a newer Node or use Docker instead
+(Option A) — the backend won't start otherwise.
+
+```bash
+cd backend
+npm install
+npm start
+```
+
+Open **http://localhost:3000** (or whatever port you set via `PORT=...`
+before `npm start`).
+
+## Login
+
+Same as before — by ID, never by email:
+
+| Role    | Login ID        | Password     |
+|---------|------------------|--------------|
+| Faculty | `FAC001`         | `faculty123` |
+| Student | `ADT24SOCB0001`, `ADT24SOCB0002`, `ADT24SOCB0820`, `ADT24SOCB0020` | `PASS123` |
+
+To try the new **Forgot Password** link: on the login page enter
+`ADT24SOCB0001` + `hanfa@cdad.edu` (the email on file for that student),
+type the captcha shown, then choose a new password.
+
+## If something doesn't work
+
+- **"No such built-in module: node:sqlite"** — your Node is too old. Use
+  Docker, or install Node 22+.
+- **Port already in use** — something else on your machine is using 3000.
+  Pick a different port (`-p 4000:3000` for Docker, or `PORT=4000 npm
+  start` for plain Node).
+- **Login fails with "Invalid ID or password"** — the database may not
+  have seeded yet. Check the server's startup logs for a line like
+  `Seeded database at version ...`; if it says nothing at all, something
+  crashed on startup — check the fuller error above that line.
+- Full details on the database schema and API routes are in the updated
+  `README.md`.
+
+## Backend reference for contributors
+
+Stack: Node 22+/Express, SQLite via `node:sqlite`, bcrypt, cookie sessions,
+multer for uploads. Entry point `backend/src/index.js` mounts one router per
+resource under `/api/*` and serves the static frontend from the project root.
+
+### Roles and sessions
+- Three roles: `student`, `faculty`, `admin`. Login is `POST /api/auth/login`
+  with `{ role, id, password }`; the server sets an HttpOnly `cdad_sid` cookie.
+  Sessions live **in memory** (a restart logs everyone out).
+- `requireRole(role)` in `backend/src/lib/sessions.js` guards routes.
+  `requireRole()` = any logged-in user, `requireRole('faculty')` = faculty **or
+  admin**, `requireRole('admin')` = admin only, `requireRole('student')` = students.
+- Handlers that branch on the caller treat admin like faculty
+  (`req.user.type === 'faculty' || 'admin'`).
+- The default admin (`ADMIN001` / `admin123`) is created in `db.js` when the
+  `admins` table is empty. Change it.
+
+### Schema changes (all additive, applied on startup)
+`db.js` uses `CREATE TABLE IF NOT EXISTS` plus `ensureColumn()`, so an existing
+database upgrades in place — no reset needed.
+- `students.section` — division (A/B/…).
+- `marks.released` — 0/1; when the column is first added, existing rows are set
+  to released so nobody loses access.
+- `exam_submissions` (one row per group per exam, unique on `group_id, exam`),
+  `exam_submission_files` (up to 5 per submission; legacy single-file rows are
+  migrated automatically), `exam_deadlines` (one optional deadline per exam).
+- `admins`.
+
+### Endpoints added in this branch
+| Method & path | Who | What |
+|---|---|---|
+| `PUT /api/marks/group/:groupId` | faculty/admin | Apply marks to every member of a group; only fields sent are overwritten; new marks start **unreleased** |
+| `POST /api/marks/release-all` | faculty/admin | `{released: true or false}` for every marks row |
+| `POST /api/marks/:id/release` | faculty/admin | Release/withdraw one student's marks |
+| `GET /api/marks` | any | Faculty/admin: everything. **Students: only released marks of their own group** |
+| `GET /api/exam-submissions` | any | `{exams, deadlines, submissions}` — faculty/admin see all, students their group's |
+| `POST /api/exam-submissions/:exam` | student (team leader) | multipart: `link`, `note`, `files` (≤5), `removeFileIds` (JSON array). Rejected after the exam's deadline |
+| `GET /api/exam-submissions/files/:fileId[?inline=1]` | faculty/admin, own-group students | Download; `inline=1` serves pdf/csv/docx for in-browser preview |
+| `PUT /api/exam-submissions/deadlines/:exam` | faculty/admin | `{deadline: ISO}` sets, empty clears; notifies students |
+| `DELETE /api/exam-submissions/:id` | faculty/admin | Remove a submission and its files |
+| `GET /api/auth/captcha` | public | New image captcha `{id, svg}`; answer kept server-side |
+| `POST /api/auth/forgot-password/reset` | public | `{role, id, email, captchaId, captchaText, newPassword}` — student/faculty only; the captcha is checked (and consumed) first, then ID + email must match |
+| `PUT /api/admin/me/password` | admin | `{currentPassword, newPassword}` (min 8) |
+| `GET /api/admin/overview` | admin | Counts |
+| `GET/POST/PUT/DELETE /api/admin/students[/:id]` | admin | Student account CRUD |
+| `POST /api/admin/students/import` | admin | `{students:[…]}` bulk add; existing IDs skipped and reported |
+| `GET/POST/PUT/DELETE /api/admin/faculty[/:id]` | admin | Faculty account CRUD |
+| `PUT /api/students/:id` | faculty/admin | Now also accepts `section` |
+| `DELETE /api/students` | faculty/admin | Delete all students (detaches `submissions.submitted_by_id` first, otherwise a foreign key blocks it) |
+
+Exam names are fixed in `routes/examSubmissions.js` (`EXAMS = ['TA1','TA2','EndSem']`).
+Uploads are stored in `backend/data/uploads/` (allowed types/size in `upload.js`).
+
+### Rules the server enforces (don't rely on the UI)
+- Deadline and team-leader checks run in middleware **before** multer, so a
+  rejected request never writes a file to disk.
+- Students never receive unreleased marks, or marks from other groups.
+- File downloads check group membership for students.
+
+### Frontend map
+`js/services/examSubmissions.js` (API helpers + preview modal), `js/services/marks.js` (marks API
+helpers), `js/pages/admin/main.js` + `admin.html` (admin panel). Faculty UI lives in
+`js/pages/faculty/main.js`, student UI in `js/pages/student/main.js`; the faculty dashboard also
+loads for admins (`currentFacultyRecord()` accepts both roles).
+
+### Running a safe test
+Start a throwaway copy with its own empty data folder, so the live database is never touched:
+```bash
+PORT=3200 CDAD_DATA_DIR=/tmp/cdad-test node backend/src/index.js
+```
+Windows PowerShell:
+```powershell
+$env:PORT = "3200"; $env:CDAD_DATA_DIR = "C:\temp\cdad-test"; node backend/src/index.js
+```
+The SQLite file in `backend/data/` is the live data — back it up (`cdad.db*`) before destructive actions. `npm test` does this for you automatically.
+
+### File storage (`backend/src/lib/fileStore.js`)
+Uploaded files go through one module with two backends: local disk
+(`backend/data/uploads/`, the default) or **Appwrite Storage** when
+`APPWRITE_ENDPOINT`, `APPWRITE_PROJECT_ID`, `APPWRITE_API_KEY` and
+`APPWRITE_BUCKET_ID` are all set. multer still writes to disk first;
+`persistUploads` (middleware after multer) then uploads to Appwrite and replaces
+the stored name with a ref `appwrite:<fileId>`. That ref is what lives in the
+`file_path` columns, and `send()` / `remove()` pick the backend from the ref's
+prefix, so old local files keep working after switching. See [DEPLOY.md](DEPLOY.md).
+Other deployment switches: `SKIP_SEED`, `COOKIE_SECURE`, `TRUST_PROXY` (read in `index.js` / `routes/auth.js`).

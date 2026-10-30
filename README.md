@@ -19,7 +19,7 @@ in plaintext.
 ## Tech Stack
 
 - HTML5, CSS3, Vanilla JavaScript on the frontend (no frameworks, no build step)
-- Node.js + Express REST API (`server/`)
+- Node.js + Express REST API (`backend/`), static website in `frontend/`
 - SQLite (via Node's built-in `node:sqlite`) as the only data store — requires Node 22+ (the Dockerfile uses `node:22-alpine`)
 - `bcryptjs` for password hashing, HttpOnly session cookies for auth
 - Docker (single Node container, no separate reverse proxy needed)
@@ -56,13 +56,13 @@ docker volume rm cdad-data
 ## Quick Start (no Docker)
 
 ```bash
-cd server
+cd backend
 npm install
 npm start
 ```
 
 Open **http://localhost:3000** (or set `PORT=...` before `npm start` to use a
-different port). The server seeds demo data into `server/data/cdad.db`
+different port). The server seeds demo data into `backend/data/cdad.db`
 automatically on first run.
 
 ## Login
@@ -76,7 +76,7 @@ for reference only.
 | Faculty | `FAC001`         | `faculty123` |
 | Student | Enrollment No. (e.g. `ADT24SOCB0001`) | `PASS123` (default) |
 
-> The default admin is created automatically on first run (`server/db.js`).
+> The default admin is created automatically on first run (`backend/src/db.js`).
 > **Change its password** (Admin Panel → 🔑 Change Password) before sharing the app — admin passwords can't be
 > reset from the login page.
 
@@ -188,8 +188,19 @@ The app walks a brand-new student through setup automatically:
   accepts admin sessions.
 
 ### Marks, Presentations, GitHub
-- Faculty edits marks (Internal/Project/Presentation/Viva); Total, %, and
-  Grade are always derived, never stored directly.
+- **Continuous Assessment — 50 marks.** Each of four heads is marked **out of
+  20** and scaled down for the total: Jury Assessment-I (Unit 1&2) → 16,
+  Jury Assessment-II (Unit 3&4) → 16, Unit 5 - MCQ based → 8, Coursera
+  Certification (min. 30 hr) → 10. Only the raw mark out of 20 is stored (blank = not entered yet); the
+  scaled marks, total, %, and Grade are always derived. Grades follow the
+  grading policy (marks out of 100): **O** above 90 (10 pts), **A+** 81–90 (9),
+  **A** 71–80 (8), **B+** 61–70 (7), **B** 51–60 (6), **C** 46–50 (5),
+  **P** 40–45 (4), **F** below 40 (0). **Finals** is a separate
+  column — an exam out of 50, held after the CA and entered as is. Before it
+  is entered the total, % and grade are out of 50 (CA only); once entered they
+  are out of 100 (CA + Finals). Faculty can enter marks
+  per student (**Edit** on the Marks page, or the boxes in a group's **Members**
+  window) or the same marks for a whole group (**+ Add Group Marks**).
 - Faculty Marks page: **section filter** (rows grouped per section with the
   average), **search by enrollment no.**, and **+ Add Group Marks** — enter
   marks once for a group and they are written to every member (blank fields
@@ -245,15 +256,15 @@ The app walks a brand-new student through setup automatically:
 ## Tests
 
 ```bash
-cd server
+cd backend
 npm test
 ```
 
-Runs the API smoke tests in `server/test/` (Node's built-in test runner, Node 22.5+). They boot the real server on a random port with a temporary data directory (`CDAD_DATA_DIR`), so your live `server/data/` is never touched. Covered: login per role, 401s, role boundaries, uploads (type/size/team-leader rules), review validation, mark release, exam deadlines, captcha, logout.
+Runs the API smoke tests in `backend/test/` (Node's built-in test runner, Node 22.5+). They boot the real server on a random port with a temporary data directory (`CDAD_DATA_DIR`), so your live `backend/data/` is never touched. Covered: login per role, 401s, role boundaries, uploads (type/size/team-leader rules), review validation, mark release, exam deadlines, captcha, logout.
 
 ## Database
 
-SQLite tables (`server/db.js`): `admins`, `faculty`, `students`
+SQLite tables (`backend/src/db.js`): `admins`, `faculty`, `students`
 (has `section`), `student_groups`, `projects`, `submissions`, `marks`
 (has `released`), `exam_submissions`, `exam_submission_files`,
 `exam_deadlines`, `presentations`, `requests`,
@@ -264,83 +275,67 @@ membership is `students.group_id`, not a `members[]` array kept in sync by
 hand; group progress is read live off the linked project, never stored
 independently.
 
-The REST API (`server/routes/*.js`) reconstructs the same JSON shapes the
+The REST API (`backend/src/routes/*.js`) reconstructs the same JSON shapes the
 frontend has always used (`group.members`, `project.progress`, etc.) from
-these normalized tables via joins, so `js/storage.js`'s six helpers
+these normalized tables via joins, so `js/core/storage.js`'s six helpers
 (`getData`, `saveData`, `addData`, `updateData`, `deleteData`, `findData`)
 still look the same to every other frontend file — they just `fetch()` the
 API now instead of reading `localStorage`.
 
 ## File Structure
 ```
-CDAD/
+CBAD-project/
+├── frontend/                 the static website — the ONLY folder the server exposes
+│   ├── index.html            login
+│   ├── student.html  faculty.html  admin.html  group-details.html
+│   ├── css/                  style.css, dashboard.css, forms.css, responsive.css
+│   └── js/                   plain scripts (no build step); load order is set in each page
+│       ├── core/             storage.js (API helpers), common.js (UI helpers, grading), auth.js
+│       ├── services/         one small API wrapper per resource: groups, projects, marks, ...
+│       └── pages/
+│           ├── faculty/      main.js + one file per dashboard section
+│           ├── student/      main.js + one file per dashboard section
+│           └── admin/        main.js
 │
-├── index.html
-├── student.html
-├── faculty.html
-├── admin.html
-├── group-details.html
-├── Dockerfile
-├── README.md
+├── backend/                  Node/Express API + SQLite
+│   ├── src/
+│   │   ├── index.js          app setup, mounts the routers, serves frontend/
+│   │   ├── config.js         paths + settings (.env), the one place that knows where things live
+│   │   ├── db.js             SQLite schema + helpers
+│   │   ├── seed.js           demo data (version-gated)
+│   │   ├── routes/           one router per resource (auth, students, groups, marks, ...)
+│   │   └── lib/              sessions (+ requireRole), serializers, notify, groupOps,
+│   │                         fileStore (local disk / Appwrite), upload, captcha, format
+│   ├── test/                 API tests (npm test)
+│   ├── data/                 cdad.db + uploads — created on first run, git-ignored
+│   ├── .env                  optional settings, git-ignored (see ../.env.example)
+│   └── package.json
 │
-├── css/
-│   ├── style.css
-│   ├── dashboard.css
-│   ├── forms.css
-│   └── responsive.css
-│
-├── js/
-│   ├── storage.js
-│   ├── common.js
-│   ├── auth.js
-│   ├── groups.js
-│   ├── projects.js
-│   ├── marks.js
-│   ├── examSubmissions.js
-│   ├── admin.js
-│   ├── presentations.js
-│   ├── requests.js
-│   ├── notifications.js
-│   ├── announcements.js
-│   ├── student.js
-│   └── faculty.js
-│
-├── assets/
-│   ├── images/
-│   └── icons/
-│
-└── server/
-    ├── index.js          (Express app + static file serving)
-    ├── db.js              (SQLite schema + helpers)
-    ├── seed.js            (demo data, version-gated)
-    ├── sessions.js        (cookie sessions + requireRole middleware)
-    ├── serializers.js     (DB row -> frontend JSON shape)
-    ├── notify.js           (server-side notification creation)
-    ├── groupOps.js        (shared group-membership operations)
-    ├── data/cdad.db       (SQLite file, created on first run — gitignored)
-    └── routes/
-        ├── auth.js, students.js, faculty.js, admin.js, groups.js,
-        ├── groupJoinRequests.js, projects.js, marks.js, examSubmissions.js,
-        └── presentations.js, requests.js, peerRequests.js, notifications.js,
-            announcements.js, activity.js
+├── docs/                     BACKEND.md (API reference), DEPLOY.md (Docker / Render / Appwrite)
+├── Dockerfile, docker-compose.yml, render.yaml     deployment
+├── package.json              convenience scripts: npm start / npm run dev / npm test
+└── README.md
 ```
 
+Run it from the project root: `cd backend && npm install` once, then `npm start`
+in `backend/` (or `npm start` / `npm run dev` / `npm test` from the root).
+
 To put it online with Docker (and optionally keep uploaded files in Appwrite),
-see [DEPLOY.md](DEPLOY.md).
+see [DEPLOY.md](docs/DEPLOY.md).
 
 The full backend reference (roles, every endpoint, rules the server enforces)
-is in [BACKEND.md](BACKEND.md#backend-reference-for-contributors).
+is in [BACKEND.md](docs/BACKEND.md#backend-reference-for-contributors).
 
 ## Resetting the Demo Data
 
-The seed re-runs automatically whenever `SEED_VERSION` in `server/seed.js` is
+The seed re-runs automatically whenever `SEED_VERSION` in `backend/src/seed.js` is
 bumped to a new string — this is how roster changes propagate to everyone
 without needing a manual reset.
 
 **Without Docker** — stop the server and delete the database file:
 
 ```bash
-rm server/data/cdad.db server/data/cdad.db-shm server/data/cdad.db-wal
+rm backend/data/cdad.db backend/data/cdad.db-shm backend/data/cdad.db-wal
 npm --prefix server start
 ```
 

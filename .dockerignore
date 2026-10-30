@@ -1,8 +1,11 @@
 .git
-server/node_modules
-server/data
 node_modules
-*.md
+backend/node_modules
+backend/data
+backend/test
+backend/.env
 .env
-server/.env
+*.md
+docs
 docker-compose.yml
+*.log

@@ -1,4 +1,16 @@
+# dependencies
 node_modules/
-server/data/
+
+# runtime data: the SQLite database and uploaded files
+backend/data/
+
+# secrets / local settings (copy .env.example to create them)
 .env
-server/.env
+backend/.env
+
+# logs and OS/editor files
+*.log
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/

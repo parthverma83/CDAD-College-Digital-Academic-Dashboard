@@ -1,4 +1,4 @@
-# Render Blueprint — New + > Blueprint, pick this repo/branch. See DEPLOY.md ("Render").
+# Render Blueprint — New + > Blueprint, pick this repo/branch. See docs/DEPLOY.md ("Render").
 # The persistent disk (SQLite database lives on it) is only available on PAID instance
 # types; a free instance has no disk, so every deploy/restart would erase the data.
 services:

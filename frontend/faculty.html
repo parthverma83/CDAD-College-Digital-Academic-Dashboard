@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Faculty Dashboard — CDAD</title>
+<link rel="stylesheet" href="css/style.css">
+<link rel="stylesheet" href="css/dashboard.css">
+<link rel="stylesheet" href="css/forms.css">
+<link rel="stylesheet" href="css/responsive.css">
+</head>
+<body>
+<div class="app-shell">
+  <aside class="sidebar">
+    <div class="sidebar__brand">
+      <div class="sidebar__mark">🎓</div>
+      <div class="sidebar__brand-text"><strong>CDAD</strong><span>Faculty Portal</span></div>
+    </div>
+    <button class="nav-link active" data-view="overview"><span class="nav-link__icon">▣</span> Dashboard</button>
+    <button class="nav-link" data-view="students"><span class="nav-link__icon">●</span> Students</button>
+    <button class="nav-link" data-view="groups"><span class="nav-link__icon">▦</span> Groups</button>
+    <button class="nav-link" data-view="projects"><span class="nav-link__icon">◧</span> Projects</button>
+    <button class="nav-link" data-view="marks"><span class="nav-link__icon">▤</span> Marks</button>
+    <button class="nav-link" data-view="presentations"><span class="nav-link__icon">◈</span> Presentations</button>
+    <button class="nav-link" data-view="submissions"><span class="nav-link__icon">☑</span> Submissions</button>
+    <button class="nav-link" data-view="requests"><span class="nav-link__icon">✎</span> Requests</button>
+    <button class="nav-link" data-view="notifications"><span class="nav-link__icon">◔</span> Notifications <span class="nav-link__badge" id="sidebarNotifBadge" style="display:none;"></span></button>
+    <button class="nav-link" data-view="announcements"><span class="nav-link__icon">✉</span> Announcements</button>
+    <button class="nav-link" data-view="profile"><span class="nav-link__icon">◎</span> My Profile</button>
+    <button class="nav-link" data-view="activity"><span class="nav-link__icon">≡</span> Activity Log</button>
+    <div class="sidebar__footer">
+      <button class="logout-btn" id="logoutBtn"><span class="nav-link__icon">⏻</span> Logout</button>
+    </div>
+  </aside>
+
+  <main class="main">
+    <!-- OVERVIEW -->
+    <section class="view active" id="view-overview">
+      <div class="topbar">
+        <div><h1>Dashboard</h1><div class="topbar__sub" id="welcomeMsg">Welcome back 👋</div></div>
+        <div class="topbar__utility">
+          <button class="icon-btn" title="Notifications" onclick="showView('notifications')">🔔<span class="icon-btn__badge" id="notifBadge" style="display:none;"></span></button>
+          <div class="topbar-user" id="topbarUser"></div>
+        </div>
+      </div>
+      <div class="stat-grid" id="overviewStats"></div>
+      <div class="section">
+        <div class="section__head"><h3>Group Progress</h3></div>
+        <div class="bar-chart" id="groupProgressChart"></div>
+      </div>
+      <div class="section">
+        <div class="section__head"><h3>Project Status Breakdown</h3></div>
+        <div class="bar-chart" id="projectStatusChart"></div>
+      </div>
+    </section>
+
+    <!-- STUDENTS -->
+    <section class="view" id="view-students">
+      <div class="topbar">
+        <div><h1>Students Overview</h1><div class="topbar__sub">Manage every student record</div></div>
+        <div class="topbar__actions">
+          <button class="btn btn--ghost" id="importStudentsBtn">Import CSV</button>
+          <button class="btn btn--ghost" id="importSectionBtn" title="Import students of one section / division from a CSV">🏫 Import Section</button>
+          <button class="btn btn--danger" id="deleteAllStudentsBtn">Delete All</button>
+          <button class="btn btn--primary" id="addStudentBtn">+ Add Student</button>
+        </div>
+      </div>
+      <div class="section">
+        <div class="filter-bar" id="studentSectionTabs" style="gap:8px; flex-wrap:wrap; margin-bottom:10px;"></div>
+        <div class="filter-bar">
+          <input type="search" id="studentSearch" placeholder="Search students...">
+          <select id="studentGroupFilter"></select>
+          <select id="studentStatusFilter">
+            <option value="">All Status</option>
+            <option>Active</option>
+            <option>Inactive</option>
+          </select>
+          <button class="btn btn--ghost btn--sm" id="assignSectionBtn" title="Put every student currently listed into a section">🏫 Assign Section</button>
+          <button class="btn btn--ghost btn--sm" id="exportStudentsBtn">Export</button>
+        </div>
+        <div class="table-wrap">
+          <table class="data-table">
+            <thead><tr><th>Student ID</th><th>Student Name</th><th>Section</th><th>Group</th><th>Project</th><th>Progress</th><th>Marks</th><th>Status</th><th>Action</th></tr></thead>
+            <tbody id="studentsTableBody"></tbody>
+          </table>
+        </div>
+        <div class="pagination" id="studentsPagination"></div>
+      </div>
+    </section>
+
+    <!-- GROUPS -->
+    <section class="view" id="view-groups">
+      <div class="topbar">
+        <div><h1>Groups</h1><div class="topbar__sub">Manage project teams</div></div>
+        <div class="topbar__actions">
+          <label class="division-filter" for="groupDivisionFilter">Division
+            <select id="groupDivisionFilter" title="Show groups of one division (CC1, CC2, CC3 …)"></select>
+          </label>
+          <button class="btn btn--danger" id="deleteAllGroupsBtn" style="display:none;">Delete All</button>
+          <button class="btn btn--ghost" id="importGroupsBtn">Import CSV</button>
+          <button class="btn btn--primary" id="addGroupBtn">+ Add Group</button>
+        </div>
+      </div>
+      <div class="card-grid" id="groupsGrid"></div>
+    </section>
+
+    <!-- PROJECTS -->
+    <section class="view" id="view-projects">
+      <div class="topbar">
+        <div><h1>Projects</h1><div class="topbar__sub">Manage all academic projects</div></div>
+        <div class="topbar__actions"><button class="btn btn--primary" id="addProjectBtn">+ Create Project</button></div>
+      </div>
+      <div class="card-grid" id="projectsGrid"></div>
+    </section>
+
+    <!-- MARKS -->
+    <section class="view" id="view-marks">
+      <div class="topbar">
+        <div><h1>Marks</h1><div class="topbar__sub">Continuous Assessment (50 marks: each head is marked out of 20 and scaled down) + Finals (50 marks, held after the CA).</div></div>
+        <div class="topbar__actions">
+          <button class="btn btn--ghost" id="releaseAllMarksBtn" title="Release all marks to students">📢 Release All Marks</button>
+          <button class="btn btn--primary" id="addGroupMarksBtn">+ Add Group Marks</button>
+        </div>
+      </div>
+      <div class="section">
+        <div class="filter-bar">
+          <input type="search" id="marksSearch" placeholder="Search by enrollment no...">
+          <select id="marksSectionFilter"></select>
+        </div>
+        <div class="table-wrap">
+          <table class="data-table">
+            <thead><tr><th>Student</th><th>Jury I<div class="faint" style="font-weight:400;">20 → 16</div></th><th>Jury II<div class="faint" style="font-weight:400;">20 → 16</div></th><th>Unit 5 MCQ<div class="faint" style="font-weight:400;">20 → 8</div></th><th>Coursera<div class="faint" style="font-weight:400;">20 → 10</div></th><th>CA Total<div class="faint" style="font-weight:400;">out of 50</div></th><th>Finals<div class="faint" style="font-weight:400;">out of 50</div></th><th>Overall<div class="faint" style="font-weight:400;">CA + Finals</div></th><th>%</th><th>Grade</th><th>Actions</th></tr></thead>
+            <tbody id="marksTableBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- PRESENTATIONS -->
+    <section class="view" id="view-presentations">
+      <div class="topbar">
+        <div><h1>Presentations</h1><div class="topbar__sub">Schedule and manage group presentations</div></div>
+        <div class="topbar__actions"><button class="btn btn--primary" id="addPresentationBtn">+ Schedule</button></div>
+      </div>
+      <div class="section">
+        <div class="table-wrap">
+          <table class="data-table">
+            <thead><tr><th>ID</th><th>Group</th><th>Project</th><th>Date/Time</th><th>Venue</th><th>Status</th><th>Actions</th></tr></thead>
+            <tbody id="presentationsTableBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- SUBMISSIONS HUB -->
+    <section class="view" id="view-submissions">
+      <div class="topbar">
+        <div><h1>Submissions</h1><div class="topbar__sub">Every project submission in one place — no need to open each project individually</div></div>
+      </div>
+      <div class="section">
+        <div class="filter-bar">
+          <select id="submissionStatusFilter">
+            <option value="">All Statuses</option>
+            <option value="Pending Review">Pending Review</option>
+            <option value="Approved">Approved</option>
+            <option value="Rejected">Rejected</option>
+          </select>
+          <span class="faint" id="submissionCountLabel" style="font-size:12.5px;"></span>
+        </div>
+        <div class="table-wrap">
+          <table class="data-table">
+            <thead><tr><th>Project</th><th>Group</th><th>Submitted By</th><th>Submitted On</th><th>Status</th><th>Actions</th></tr></thead>
+            <tbody id="submissionsTableBody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="section__head"><h3>Exam Submissions</h3><span class="faint" id="examCountLabel" style="font-size:12.5px;"></span></div>
+        <div class="filter-bar" id="examTabs" style="gap:8px;">
+          <button class="btn btn--primary btn--sm" data-exam="TA1">TA1</button>
+          <button class="btn btn--ghost btn--sm" data-exam="TA2">TA2</button>
+          <button class="btn btn--ghost btn--sm" data-exam="EndSem">End Sem</button>
+        </div>
+        <div class="filter-bar" id="examDeadlineBar" style="gap:8px; align-items:center;">
+          <label for="examDeadlineInput" style="font-size:12.5px; font-weight:600;">⏰ Deadline</label>
+          <input type="datetime-local" id="examDeadlineInput">
+          <button class="btn btn--primary btn--sm" id="saveExamDeadlineBtn">Set Deadline</button>
+          <button class="btn btn--ghost btn--sm" id="clearExamDeadlineBtn">Remove</button>
+          <span class="faint" id="examDeadlineStatus" style="font-size:12.5px;"></span>
+        </div>
+        <div class="table-wrap">
+          <table class="data-table">
+            <thead><tr><th>Group</th><th>Project</th><th>Submitted By</th><th>Submitted On</th><th>Link / File</th><th>Note</th><th>Actions</th></tr></thead>
+            <tbody id="examSubmissionsBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- REQUESTS -->
+    <section class="view" id="view-requests">
+      <div class="topbar"><div><h1>Requests</h1><div class="topbar__sub">Respond to student requests</div></div></div>
+      <div class="section">
+        <div class="section__head"><h3>Academic Requests</h3></div>
+        <div id="requestsList"></div>
+      </div>
+      <div class="section">
+        <div class="section__head"><h3>Student-to-Student Requests (Monitor)</h3></div>
+        <p class="field-hint" style="margin-bottom:12px;">Students manage these directly with each other — shown here for oversight.</p>
+        <div id="peerRequestsMonitor"></div>
+      </div>
+      <div class="section">
+        <div class="section__head"><h3>Group Join Requests (Monitor)</h3></div>
+        <p class="field-hint" style="margin-bottom:12px;">Students send these straight to a group's leader, who accepts or rejects them directly — shown here for oversight.</p>
+        <div id="groupJoinRequestsMonitor"></div>
+      </div>
+    </section>
+
+    <!-- NOTIFICATIONS -->
+    <section class="view" id="view-notifications">
+      <div class="topbar">
+        <div><h1>Notifications</h1><div class="topbar__sub">Broadcast updates to students</div></div>
+        <div class="topbar__actions"><button class="btn btn--primary" id="addNotificationBtn">+ Create</button></div>
+      </div>
+      <div class="section" id="notificationsList"></div>
+    </section>
+
+    <!-- ANNOUNCEMENTS -->
+    <section class="view" id="view-announcements">
+      <div class="topbar">
+        <div><h1>Announcements</h1><div class="topbar__sub">Department-wide announcements</div></div>
+        <div class="topbar__actions"><button class="btn btn--primary" id="addAnnouncementBtn">+ Create</button></div>
+      </div>
+      <div class="section" id="announcementsList"></div>
+    </section>
+
+    <!-- PROFILE -->
+    <section class="view" id="view-profile">
+      <div class="topbar">
+        <div><h1>My Profile</h1><div class="topbar__sub">Manage your faculty profile</div></div>
+        <div class="topbar__actions"><button class="btn btn--ghost" id="editFacultyProfileBtn">Edit ✎</button></div>
+      </div>
+      <div class="section" id="facultyProfileCard"></div>
+    </section>
+
+    <!-- ACTIVITY LOG -->
+    <section class="view" id="view-activity">
+      <div class="topbar">
+        <div><h1>Activity Log</h1><div class="topbar__sub">Full audit trail of every change</div></div>
+        <div class="topbar__actions"><button class="btn btn--ghost" id="clearActivityBtn">Clear History</button></div>
+      </div>
+      <div class="section"><div class="activity-list" id="activityList"></div></div>
+    </section>
+  </main>
+</div>
+
+<script src="js/core/storage.js"></script>
+<script src="js/core/common.js"></script>
+<script src="js/core/auth.js"></script>
+<script src="js/services/groups.js"></script>
+<script src="js/services/projects.js"></script>
+<script src="js/services/marks.js"></script>
+  <script src="js/services/examSubmissions.js"></script>
+<script src="js/services/presentations.js"></script>
+<script src="js/services/requests.js"></script>
+<script src="js/services/notifications.js"></script>
+<script src="js/services/announcements.js"></script>
+<script src="js/pages/faculty/main.js"></script>
+<script src="js/pages/faculty/overview.js"></script>
+<script src="js/pages/faculty/students.js"></script>
+<script src="js/pages/faculty/groups.js"></script>
+<script src="js/pages/faculty/projects.js"></script>
+<script src="js/pages/faculty/submissionsHub.js"></script>
+<script src="js/pages/faculty/marks.js"></script>
+<script src="js/pages/faculty/presentations.js"></script>
+<script src="js/pages/faculty/requests.js"></script>
+<script src="js/pages/faculty/notifications.js"></script>
+<script src="js/pages/faculty/announcements.js"></script>
+<script src="js/pages/faculty/profile.js"></script>
+<script src="js/pages/faculty/activity.js"></script>
+<script src="js/pages/faculty/utility.js"></script>
+</body>
+</html>
