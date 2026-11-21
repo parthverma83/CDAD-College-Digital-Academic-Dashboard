@@ -2,7 +2,7 @@
 
 A fully editable academic dashboard for managing students, groups, projects,
 marks, presentations, and submissions. A Node/Express REST API backed by
-SQLite is the single source of truth — every student and faculty session
+PostgreSQL (Supabase) in production, or a local SQLite file in development, is the single source of truth — every student and faculty session
 reads and writes the same server-side data, so an edit made on the Faculty
 Dashboard is immediately visible on the Student Dashboard (and vice versa
 where students are allowed to edit their own data), across devices, not just
@@ -20,7 +20,9 @@ in plaintext.
 
 - HTML5, CSS3, Vanilla JavaScript on the frontend (no frameworks, no build step)
 - Node.js + Express REST API (`backend/`), static website in `frontend/`
-- SQLite (via Node's built-in `node:sqlite`) as the only data store — requires Node 22.5+ (the Dockerfile uses `node:22-alpine`)
+- PostgreSQL on Supabase when `DATABASE_URL` is set, otherwise SQLite (Node's built-in `node:sqlite`) — requires Node 22.5+ (the Dockerfile uses `node:22-alpine`)
+- Supabase Storage for uploaded files (optional; local disk otherwise)
+- Deployable to **Vercel** (frontend on the CDN, API as a serverless function) — see [DEPLOY.md](docs/DEPLOY.md#0-vercel--supabase)
 - `bcryptjs` for password hashing, HttpOnly session cookies for auth
 - Docker (single Node container, no separate reverse proxy needed)
 
@@ -259,16 +261,16 @@ cd backend
 npm test
 ```
 
-Runs the API smoke tests in `backend/test/` (Node's built-in test runner, Node 22.5+). They boot the real server on a random port with a temporary data directory (`CDAD_DATA_DIR`), so your live `backend/data/` is never touched. Covered: login per role, 401s, role boundaries, uploads (type/size/team-leader rules), review validation, mark release, exam deadlines, captcha, logout.
+Runs the API tests in `backend/test/` (Node's built-in test runner, Node 22.5+) twice: on SQLite and on an in-memory PostgreSQL (PGlite; `npm run test:pg` runs only that). They boot the real server on a random port with a temporary data directory (`CDAD_DATA_DIR`) and blank `DATABASE_URL`/`SUPABASE_*`, so your live data, database and bucket are never touched. Covered: login per role, sessions, 401s, role boundaries, every resource's create/edit/delete flow, uploads (type/size/team-leader rules), downloads, reviews, marks, exam deadlines, captcha, connections and join requests.
 
 ## Database
 
-SQLite tables (`backend/src/db.js`): `admins`, `faculty`, `students`
+Tables (`backend/src/db.js`; the same schema on PostgreSQL and SQLite): `admins`, `faculty`, `students`
 (has `section`), `student_groups`, `projects`, `submissions`, `marks`
 (has `released`), `exam_submissions`, `exam_submission_files`,
 `exam_deadlines`, `presentations`, `requests`,
 `group_join_requests`, `student_requests`, `student_connections`,
-`notifications`, `announcements`, `activity`, `seed_meta`. Real foreign keys
+`notifications`, `announcements`, `activity`, `seed_meta`, `sessions`, `captchas`. Real foreign keys
 replace what used to be hand-synced LocalStorage arrays — e.g. group
 membership is `students.group_id`, not a `members[]` array kept in sync by
 hand; group progress is read live off the linked project, never stored
@@ -296,22 +298,26 @@ CBAD-project/
 │           ├── student/      main.js + one file per dashboard section
 │           └── admin/        main.js
 │
-├── backend/                  Node/Express API + SQLite
+├── api/index.js              Vercel serverless entry: exports the Express app from backend/src/app.js
+├── backend/                  Node/Express API (PostgreSQL / SQLite)
 │   ├── src/
-│   │   ├── index.js          app setup, mounts the routers, serves frontend/
+│   │   ├── app.js            the Express app: mounts the routers, serves frontend/ (used by index.js and api/index.js)
+│   │   ├── index.js          local / Docker entry: app.listen
 │   │   ├── config.js         paths + settings (.env), the one place that knows where things live
-│   │   ├── db.js             SQLite schema + helpers
+│   │   ├── db.js             one async DB API over PostgreSQL (DATABASE_URL) or SQLite, schema + helpers
 │   │   ├── seed.js           demo data (version-gated)
 │   │   ├── routes/           one router per resource (auth, students, groups, marks, ...)
 │   │   └── lib/              sessions (+ requireRole), serializers, notify, groupOps,
 │   │                         fileStore (local disk / Supabase Storage), upload, captcha, format
-│   ├── test/                 API tests (npm test)
+│   ├── scripts/              migrate-to-postgres.js (copy SQLite data + local uploads to Supabase)
+│   ├── test/                 API tests (npm test: SQLite + PGlite)
 │   ├── data/                 cdad.db + uploads — created on first run, git-ignored
 │   ├── .env                  optional settings, git-ignored (see ../.env.example)
 │   └── package.json
 │
-├── docs/                     BACKEND.md (API reference), DEPLOY.md (Docker / Render / Supabase)
-├── Dockerfile, docker-compose.yml, render.yaml     deployment
+├── docs/                     BACKEND.md (API reference), DEPLOY.md (Vercel + Supabase / Docker / Render)
+├── vercel.json               Vercel: static frontend/, /api rewrite, region
+├── Dockerfile, docker-compose.yml, render.yaml     container deployment
 ├── package.json              convenience scripts: npm start / npm run dev / npm test
 └── README.md
 ```

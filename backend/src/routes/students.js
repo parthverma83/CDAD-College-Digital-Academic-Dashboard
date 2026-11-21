@@ -6,31 +6,33 @@
 const express = require('express');
 const bcrypt = require('bcryptjs');
 const { db, nextSequentialId, logActivity } = require('../db');
-const { serializeStudent, groupIdByDisplayId } = require('../lib/serializers');
+const { mapAll, serializeStudent, groupIdByDisplayId } = require('../lib/serializers');
 const { requireRole } = require('../lib/sessions');
 
 const router = express.Router();
 
-router.get('/', requireRole(), (req, res) => {
-  res.json(db.prepare('SELECT * FROM students').all().map(serializeStudent));
+const getRow = (id) => db.prepare('SELECT * FROM students WHERE id = ?').get(id);
+
+router.get('/', requireRole(), async (req, res) => {
+  res.json(await mapAll(await db.prepare('SELECT * FROM students ORDER BY id').all(), serializeStudent));
 });
 
-router.post('/', requireRole('faculty'), (req, res) => {
+router.post('/', requireRole('faculty'), async (req, res) => {
   const f = req.body || {};
-  const displayId = (f.displayId || nextSequentialId('students', 'ST', 3)).trim();
+  const displayId = (f.displayId || await nextSequentialId('students', 'ST', 3)).trim();
   const passwordHash = bcrypt.hashSync(f.password || 'PASS123', 10);
-  const groupId = f.group ? groupIdByDisplayId(f.group) : null;
-  const info = db.prepare(`
+  const groupId = f.group ? await groupIdByDisplayId(f.group) : null;
+  const info = await db.prepare(`
     INSERT INTO students (display_id, name, email, password_hash, phone, course, year, department, group_id, role, status, avatar, section)
     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `).run(displayId, f.name, f.email || '', passwordHash, f.phone || '', f.course || '', f.year || '',
     f.department || '', groupId, f.role || 'Member', f.status || 'Active', f.avatar || '', (f.section || '').trim());
-  logActivity(`Student ${displayId} added`);
-  res.status(201).json(serializeStudent(db.prepare('SELECT * FROM students WHERE id = ?').get(info.lastInsertRowid)));
+  await logActivity(`Student ${displayId} added`);
+  res.status(201).json(await serializeStudent(await getRow(info.lastInsertRowid)));
 });
 
-router.put('/:id', requireRole(), (req, res) => {
-  const row = db.prepare('SELECT * FROM students WHERE id = ?').get(req.params.id);
+router.put('/:id', requireRole(), async (req, res) => {
+  const row = await getRow(req.params.id);
   if (!row) return res.status(404).json({ error: 'Not found' });
   if (req.user.type === 'student' && req.user.id !== row.id) return res.status(403).json({ error: 'Forbidden' });
 
@@ -50,35 +52,39 @@ router.put('/:id', requireRole(), (req, res) => {
   };
   const passwordHash = isFaculty && f.password ? bcrypt.hashSync(f.password, 10) : row.password_hash;
 
-  db.prepare(`
+  await db.prepare(`
     UPDATE students SET name=?, email=?, phone=?, avatar=?, course=?, year=?, department=?, section=?, role=?, status=?, password_hash=?
     WHERE id=?
   `).run(fields.name, fields.email, fields.phone, fields.avatar, fields.course, fields.year,
     fields.department, fields.section, fields.role, fields.status, passwordHash, row.id);
 
   if (isFaculty && f.group !== undefined) {
-    const newGroupId = f.group ? groupIdByDisplayId(f.group) : null;
-    db.prepare('UPDATE students SET group_id = ? WHERE id = ?').run(newGroupId, row.id);
+    const newGroupId = f.group ? await groupIdByDisplayId(f.group) : null;
+    await db.prepare('UPDATE students SET group_id = ? WHERE id = ?').run(newGroupId, row.id);
   }
 
-  logActivity(`Student ${row.display_id} updated`);
-  res.json(serializeStudent(db.prepare('SELECT * FROM students WHERE id = ?').get(row.id)));
+  await logActivity(`Student ${row.display_id} updated`);
+  res.json(await serializeStudent(await getRow(row.id)));
 });
 
-router.delete('/:id', requireRole('faculty'), (req, res) => {
-  const row = db.prepare('SELECT * FROM students WHERE id = ?').get(req.params.id);
+router.delete('/:id', requireRole('faculty'), async (req, res) => {
+  const row = await getRow(req.params.id);
   if (!row) return res.status(404).json({ error: 'Not found' });
-  db.prepare('DELETE FROM students WHERE id = ?').run(row.id);
-  logActivity(`Student ${row.display_id} deleted`);
+  // submissions.submitted_by_id has no ON DELETE action, so detach it first or the delete is rejected.
+  await db.prepare('UPDATE submissions SET submitted_by_id = NULL WHERE submitted_by_id = ?').run(row.id);
+  await db.prepare('DELETE FROM students WHERE id = ?').run(row.id);
+  await logActivity(`Student ${row.display_id} deleted`);
   res.json({ ok: true });
 });
 
 /** "Delete All" — clears a bad CSV import. Groups' team_leader_id/members fall out automatically. */
-router.delete('/', requireRole('faculty'), (req, res) => {
-  // submissions.submitted_by_id has no ON DELETE action, so detach it first or the delete is rejected.
-  db.prepare('UPDATE submissions SET submitted_by_id = NULL').run();
-  db.prepare('DELETE FROM students').run();
-  logActivity('All students deleted');
+router.delete('/', requireRole('faculty'), async (req, res) => {
+  await db.transaction(async () => {
+    // submissions.submitted_by_id has no ON DELETE action, so detach it first or the delete is rejected.
+    await db.prepare('UPDATE submissions SET submitted_by_id = NULL').run();
+    await db.prepare('DELETE FROM students').run();
+  });
+  await logActivity('All students deleted');
   res.json({ ok: true });
 });
 

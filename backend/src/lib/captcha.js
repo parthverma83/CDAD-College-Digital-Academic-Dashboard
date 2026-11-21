@@ -8,15 +8,15 @@
    ============================================================ */
 const crypto = require('node:crypto');
 
+const { db } = require('../db');
+
 const TTL_MS = 5 * 60 * 1000;
 const ALPHABET = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // no 0/O/1/I to avoid look-alikes
-const pending = new Map(); // id -> { answer, expiresAt }
 
 function randInt(max) { return crypto.randomInt(0, max); }
 
-function purgeExpired() {
-  const now = Date.now();
-  for (const [id, c] of pending) if (c.expiresAt < now) pending.delete(id);
+async function purgeExpired() {
+  await db.prepare('DELETE FROM captchas WHERE expires_at < ?').run(Date.now());
 }
 
 // 5x7 bitmap glyphs, drawn as small squares: the SVG contains no <text>, so the answer
@@ -85,20 +85,21 @@ function renderSvg(text) {
   return parts.join('');
 }
 
-/** Returns { id, svg } and remembers the answer server-side. */
-function createCaptcha() {
-  purgeExpired();
+/** Returns { id, svg } and remembers the answer server-side (in the database, so it works on serverless hosts). */
+async function createCaptcha() {
+  await purgeExpired();
   const text = Array.from({ length: 5 }, () => ALPHABET[randInt(ALPHABET.length)]).join('');
   const id = crypto.randomUUID();
-  pending.set(id, { answer: text, expiresAt: Date.now() + TTL_MS });
+  await db.prepare('INSERT INTO captchas (id, answer, expires_at) VALUES (?, ?, ?)').run(id, text, Date.now() + TTL_MS);
   return { id, svg: renderSvg(text) };
 }
 
 /** Case-insensitive check; the captcha is consumed whether or not it matched. */
-function verifyCaptcha(id, input) {
-  const c = pending.get(id);
-  pending.delete(id);
-  if (!c || Date.now() > c.expiresAt) return false;
+async function verifyCaptcha(id, input) {
+  if (!id || typeof id !== 'string') return false;
+  const c = await db.prepare('SELECT answer, expires_at FROM captchas WHERE id = ?').get(id);
+  await db.prepare('DELETE FROM captchas WHERE id = ?').run(id);
+  if (!c || Date.now() > Number(c.expires_at)) return false;
   return c.answer === String(input || '').trim().toUpperCase();
 }
 

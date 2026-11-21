@@ -2,13 +2,14 @@
   "name": "cdad",
   "version": "1.0.0",
   "private": true,
-  "description": "CDAD — College Digital Academic Dashboard. Convenience scripts for the backend/ + frontend/ project; the app itself lives in backend/ (API + SQLite) and frontend/ (static site).",
+  "description": "CDAD — College Digital Academic Dashboard. Convenience scripts for the backend/ + frontend/ project; the app lives in backend/ (API) and frontend/ (static site), deployable to Vercel + Supabase (see docs/DEPLOY.md).",
   "scripts": {
     "install:backend": "npm --prefix backend install",
     "start": "npm --prefix backend start",
     "dev": "npm --prefix backend run dev",
     "seed": "npm --prefix backend run seed",
-    "test": "npm --prefix backend test"
+    "test": "npm --prefix backend test",
+    "migrate:pg": "npm --prefix backend run migrate:pg"
   },
   "engines": {
     "node": ">=22.5.0"

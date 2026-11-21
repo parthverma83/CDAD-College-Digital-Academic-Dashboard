@@ -2,13 +2,15 @@
   "name": "cdad-backend",
   "version": "1.0.0",
   "private": true,
-  "description": "CDAD — College Digital Academic Dashboard: Express REST API + SQLite. Also serves the static frontend/ folder.",
+  "description": "CDAD — College Digital Academic Dashboard: Express REST API on SQLite (local) or PostgreSQL/Supabase (DATABASE_URL). Also serves the static frontend/ folder.",
   "main": "src/index.js",
   "scripts": {
     "start": "node src/index.js",
     "dev": "node --watch src/index.js",
     "seed": "node src/seed.js",
-    "test": "node --test test/*.test.js"
+    "test": "node --test test/*.test.js",
+    "test:pg": "node --test --test-concurrency=1 test/pg.test.js",
+    "migrate:pg": "node scripts/migrate-to-postgres.js"
   },
   "license": "ISC",
   "type": "commonjs",
@@ -19,6 +21,10 @@
     "bcryptjs": "^3.0.3",
     "cookie-parser": "^1.4.7",
     "express": "^5.2.1",
-    "multer": "^2.4.0"
+    "multer": "^2.4.0",
+    "pg": "^8.23.1"
+  },
+  "devDependencies": {
+    "@electric-sql/pglite": "^0.2.17"
   }
 }

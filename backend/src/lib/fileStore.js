@@ -136,4 +136,14 @@ async function send(res, ref, downloadName, opts = {}) {
   return res.download(full, downloadName);
 }
 
-module.exports = { UPLOAD_DIR, isSupabase, isRemoteRef, persistUploads, remove, send };
+/**
+ * Copies a locally stored upload (backend/data/uploads/<ref>) to Supabase and returns the new ref.
+ * Used by scripts/migrate-to-postgres.js; the local file is left in place.
+ */
+async function copyLocalToSupabase(localRef, originalName, mimetype) {
+  const cfg = config();
+  if (!cfg) throw new Error('Supabase Storage is not configured (SUPABASE_URL / SUPABASE_SERVICE_KEY / SUPABASE_BUCKET).');
+  return uploadToSupabase(cfg, { filename: localRef, originalname: originalName || localRef, mimetype });
+}
+
+module.exports = { UPLOAD_DIR, isSupabase, isRemoteRef, persistUploads, remove, send, copyLocalToSupabase };

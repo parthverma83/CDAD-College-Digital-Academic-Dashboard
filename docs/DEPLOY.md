@@ -1,10 +1,61 @@
 # Deploying CDAD
 
-CDAD is one container: the Express API, the static frontend and a SQLite file.
-It needs a **persistent disk** (the `cdad-data` volume) and a **long-running
-process**, so host it on anything that runs Docker — a VPS, a college server,
-Render/Railway/Fly with a volume — not on a "static site" or "serverless"
-host.
+Two ways to run CDAD:
+
+- **Vercel + Supabase (recommended, free):** the frontend and the API run on
+  Vercel, and all data lives in Supabase (Postgres database + Storage bucket).
+  See section 0.
+- **One Docker container** (sections 1–5): the Express API, the static
+  frontend and a SQLite file on a persistent disk, on a VPS, a college server,
+  or Render/Railway/Fly with a volume.
+
+The database engine is picked by one setting: with `DATABASE_URL` set the
+API uses PostgreSQL, without it a local SQLite file.
+
+## 0. Vercel + Supabase
+
+```
+browser ──> Vercel ── frontend/ (static, CDN)
+               └──── /api/*  ->  api/index.js (the Express app, serverless)
+                                   ├── Supabase Postgres  (DATABASE_URL)
+                                   └── Supabase Storage   (SUPABASE_*)
+```
+
+**Supabase** (once):
+1. Create a project. Note its region; put the Vercel function in the same one
+   (`vercel.json` uses `sin1`, Singapore, matching `ap-southeast-1`).
+2. **Storage → New bucket** `cdad-uploads`, Public **off** (section 4).
+3. **Connect** (top bar) → **Transaction pooler** → copy the URI (port `6543`)
+   and put your database password into it. That is `DATABASE_URL`.
+4. Copy existing data (optional): put `DATABASE_URL` and `SUPABASE_*` in
+   `backend/.env`, then `cd backend && npm run migrate:pg`. It creates the
+   tables, copies every row from `backend/data/cdad.db`, uploads locally stored
+   files to the bucket, and checks that every table's row count matches. It
+   refuses to overwrite a database that already has data unless you add `--force`.
+   Without this step the first request creates empty tables (plus the demo data
+   unless `SKIP_SEED=true`).
+
+**Vercel** (once):
+1. **Add New → Project → Import** the GitHub repository. Leave the framework
+   as **Other** and the root directory as the repository root: `vercel.json`
+   already sets the install command, the output folder (`frontend`) and the
+   `/api` rewrite.
+2. **Environment Variables**: `DATABASE_URL`, `SUPABASE_URL`,
+   `SUPABASE_SERVICE_KEY`, `SUPABASE_BUCKET=cdad-uploads`, and
+   `SKIP_SEED=true` for a real deployment.
+3. **Deploy.** Every push to the production branch redeploys.
+
+Notes:
+- Sessions and captchas are stored in the database, so logins survive
+  redeploys and work across serverless instances. HTTPS-only cookies and proxy
+  trust are switched on automatically on Vercel.
+- **Upload size:** Vercel rejects request bodies over about 4.5 MB, so on Vercel
+  the files in one submission must total under ~4 MB (students get a clear
+  message; larger work can be shared as a Drive link).
+- Free Supabase projects pause after about a week without traffic. If the site
+  shows errors after a quiet period, restore the project in the Supabase dashboard.
+- `npm test` runs the API tests on SQLite and on an in-memory Postgres (PGlite),
+  so both engines stay in step.
 
 ## 1. Run it with Docker Compose
 
@@ -37,6 +88,7 @@ docker run --rm -v cdad-data:/data -v "$PWD":/backup alpine \
 | `SKIP_SEED=true` | **Use this for a real deployment.** Skips the demo students/faculty. The default admin is still created |
 | `COOKIE_SECURE=true` | Send the login cookie only over HTTPS (turn on once you have TLS) |
 | `TRUST_PROXY=true` | Trust `X-Forwarded-*` headers from your reverse proxy |
+| `DATABASE_URL` | PostgreSQL connection string (Supabase). Unset = local SQLite file — section 0 |
 | `SUPABASE_*` | Optional file storage in Supabase Storage — section 4 |
 
 Never commit `.env` (it is gitignored).

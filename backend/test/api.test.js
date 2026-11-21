@@ -41,12 +41,14 @@ before(async () => {
   dataDir = fs.mkdtempSync(path.join(os.tmpdir(), 'cdad-test-'));
   proc = spawn(process.execPath, ['src/index.js'], {
     cwd: path.join(__dirname, '..'),
-    // Blank Supabase settings (they win over backend/.env) so tests store files on local disk and never touch a real bucket.
-    env: { ...process.env, PORT: String(PORT), CDAD_DATA_DIR: dataDir, SUPABASE_URL: '', SUPABASE_SERVICE_KEY: '', SUPABASE_BUCKET: '' },
+    // Blank Supabase settings (they win over backend/.env) so tests store files on local disk and never touch a real
+    // bucket or database. TEST_DB=pglite runs the same suite on an in-memory Postgres (npm run test:pg).
+    env: { ...process.env, PORT: String(PORT), CDAD_DATA_DIR: dataDir, SUPABASE_URL: '', SUPABASE_SERVICE_KEY: '', SUPABASE_BUCKET: '',
+      DATABASE_URL: process.env.TEST_DB === 'pglite' ? 'pglite:memory' : '', SKIP_SEED: '' },
     stdio: ['ignore', 'pipe', 'pipe'],
   });
   await new Promise((resolve, reject) => {
-    const t = setTimeout(() => reject(new Error('server did not start')), 15000);
+    const t = setTimeout(() => reject(new Error('server did not start')), 60000);
     proc.stdout.on('data', (d) => { if (String(d).includes('listening')) { clearTimeout(t); resolve(); } });
     proc.on('exit', (c) => reject(new Error('server exited early: ' + c)));
   });

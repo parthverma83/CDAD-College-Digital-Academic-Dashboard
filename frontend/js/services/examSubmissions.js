@@ -19,6 +19,8 @@ async function submitExamWork(exam, { link, note, files = [], removeFileIds = []
     method: 'POST', credentials: 'include', body: fd
   });
   const data = await res.json().catch(() => ({}));
+  // 413: the host rejected the request body before it reached the app (Vercel allows about 4.5 MB per request).
+  if (res.status === 413) return { error: 'The upload is too large for the server. Keep the files in one submission under 4 MB in total, or share a Drive link instead.' };
   return res.ok ? data : { error: data.error || 'Submission failed.' };
 }
 

@@ -1,0 +1,14 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "framework": null,
+  "installCommand": "npm ci --prefix backend --omit=dev",
+  "buildCommand": "echo 'static frontend, no build step'",
+  "outputDirectory": "frontend",
+  "regions": ["sin1"],
+  "functions": {
+    "api/index.js": { "maxDuration": 30, "memory": 1024 }
+  },
+  "rewrites": [
+    { "source": "/api/:path*", "destination": "/api" }
+  ]
+}

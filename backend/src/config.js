@@ -21,6 +21,7 @@ module.exports = {
   // Static site. Deliberately not the project root: the database, source code and docs must never be downloadable.
   FRONTEND_DIR: process.env.CDAD_FRONTEND_DIR || path.join(BACKEND_ROOT, '..', 'frontend'),
   // SQLite file + uploads. The Docker image points this at /app/server/data so existing volumes keep working.
-  DATA_DIR: process.env.CDAD_DATA_DIR || path.join(BACKEND_ROOT, 'data'),
+  // On Vercel only /tmp is writable; uploads pass through it on their way to Supabase Storage.
+  DATA_DIR: process.env.CDAD_DATA_DIR || (process.env.VERCEL ? '/tmp/cdad-data' : path.join(BACKEND_ROOT, 'data')),
   PORT: process.env.PORT || 3000
 };
