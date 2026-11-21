@@ -134,7 +134,17 @@ function pgDriver(url) {
   };
 }
 
-const driver = DATABASE_URL ? pgDriver(DATABASE_URL) : sqliteDriver();
+// On Vercel the disk is temporary and per-instance, so a SQLite file would silently lose data.
+const MISCONFIGURED = !DATABASE_URL && !!process.env.VERCEL;
+function missingDatabaseDriver() {
+  const fail = async () => {
+    const e = new Error('Database not configured: set DATABASE_URL (the Supabase connection string) in the Vercel project settings, then redeploy.');
+    e.status = 503; throw e;
+  };
+  return { kind: 'none', all: fail, get: fail, run: fail, exec: fail, transaction: fail };
+}
+
+const driver = MISCONFIGURED ? missingDatabaseDriver() : DATABASE_URL ? pgDriver(DATABASE_URL) : sqliteDriver();
 
 const db = {
   kind: driver.kind,
@@ -410,6 +420,7 @@ CREATE TABLE IF NOT EXISTS captchas (id TEXT PRIMARY KEY, answer TEXT NOT NULL, 
 }
 
 async function init() {
+  if (driver.kind === 'none') return driver.get();
   if (driver.kind === 'sqlite') initSqlite(driver.raw);
   else await driver.execScript(PG_SCHEMA);
   // First run only: create the default administrator. Change this password after logging in.

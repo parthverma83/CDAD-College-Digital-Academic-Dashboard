@@ -20,6 +20,8 @@ const startup = ready.then(() => {
   if (process.env.SKIP_SEED === 'true') { console.log('SKIP_SEED=true — demo data not seeded.'); return; }
   return require('./seed').seedIfEmpty();
 });
+// A failed startup is reported on every API request (see below), not as a crash.
+startup.catch(() => {});
 
 const app = express();
 if (process.env.TRUST_PROXY) app.set('trust proxy', process.env.TRUST_PROXY === 'true' ? 1 : process.env.TRUST_PROXY);
@@ -58,6 +60,7 @@ app.use((err, req, res, next) => {
   if (err.code === '22P02') return res.status(404).json({ error: 'Not found' });
   console.error(err);
   if (res.headersSent) return;
+  if (err.status === 503) return res.status(503).json({ error: err.message });
   res.status(err.status && err.status < 500 ? err.status : 400).json({ error: err.message || 'Something went wrong.' });
 });
 
