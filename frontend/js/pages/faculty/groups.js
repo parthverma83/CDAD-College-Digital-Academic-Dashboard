@@ -256,10 +256,7 @@ function groupFormModal(title, group) {
           </div>
           <div class="field">
             <label>Team Leader</label>
-            <select name="teamLeader">
-              <option value="">— None —</option>
-              ${students.map((s) => `<option value="${s.displayId}" ${group?.teamLeader===s.displayId?'selected':''}>${s.displayId} — ${escapeHtml(s.name)}</option>`).join('')}
-            </select>
+            <select name="teamLeader" id="groupLeaderSelect"></select>
           </div>
           <div class="field">
             <label>Status</label>
@@ -291,7 +288,23 @@ function groupFormModal(title, group) {
     `, {
       onMount: () => {
         document.getElementById('cancelGroupForm').addEventListener('click', closeModal);
-        document.getElementById('groupForm').addEventListener('submit', async (e) => {
+
+        // The leader must be one of this group's members, so the dropdown only lists the
+        // students currently ticked under Members and updates as boxes are (un)checked.
+        const form = document.getElementById('groupForm');
+        const leaderSelect = document.getElementById('groupLeaderSelect');
+        const nameOf = new Map(students.map((s) => [s.displayId, s.name]));
+        const refreshLeaderOptions = (preferred) => {
+          const memberIds = [...form.querySelectorAll('input[name="members"]:checked')].map((cb) => cb.value);
+          const current = preferred !== undefined ? preferred : leaderSelect.value;
+          leaderSelect.innerHTML = '<option value="">— None —</option>' + memberIds.map((id) =>
+            `<option value="${escapeHtml(id)}">${escapeHtml(id)} — ${escapeHtml(nameOf.get(id) || '')}</option>`).join('');
+          leaderSelect.value = memberIds.includes(current) ? current : '';
+        };
+        refreshLeaderOptions(group?.teamLeader || '');
+        form.querySelectorAll('input[name="members"]').forEach((cb) => cb.addEventListener('change', () => refreshLeaderOptions()));
+
+        form.addEventListener('submit', async (e) => {
           e.preventDefault();
           const fd = new FormData(e.target);
           const members = fd.getAll('members');
