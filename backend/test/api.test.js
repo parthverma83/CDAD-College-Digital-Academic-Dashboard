@@ -41,8 +41,8 @@ before(async () => {
   dataDir = fs.mkdtempSync(path.join(os.tmpdir(), 'cdad-test-'));
   proc = spawn(process.execPath, ['src/index.js'], {
     cwd: path.join(__dirname, '..'),
-    // Blank Appwrite settings (they win over backend/.env) so tests store files on local disk and never touch a real bucket.
-    env: { ...process.env, PORT: String(PORT), CDAD_DATA_DIR: dataDir, APPWRITE_ENDPOINT: '', APPWRITE_PROJECT_ID: '', APPWRITE_API_KEY: '', APPWRITE_BUCKET_ID: '' },
+    // Blank Supabase settings (they win over backend/.env) so tests store files on local disk and never touch a real bucket.
+    env: { ...process.env, PORT: String(PORT), CDAD_DATA_DIR: dataDir, SUPABASE_URL: '', SUPABASE_SERVICE_KEY: '', SUPABASE_BUCKET: '' },
     stdio: ['ignore', 'pipe', 'pipe'],
   });
   await new Promise((resolve, reject) => {

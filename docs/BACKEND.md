@@ -227,11 +227,12 @@ The SQLite file in `backend/data/` is the live data — back it up (`cdad.db*`) 
 
 ### File storage (`backend/src/lib/fileStore.js`)
 Uploaded files go through one module with two backends: local disk
-(`backend/data/uploads/`, the default) or **Appwrite Storage** when
-`APPWRITE_ENDPOINT`, `APPWRITE_PROJECT_ID`, `APPWRITE_API_KEY` and
-`APPWRITE_BUCKET_ID` are all set. multer still writes to disk first;
-`persistUploads` (middleware after multer) then uploads to Appwrite and replaces
-the stored name with a ref `appwrite:<fileId>`. That ref is what lives in the
+(`backend/data/uploads/`, the default) or **Supabase Storage** when
+`SUPABASE_URL`, `SUPABASE_SERVICE_KEY` and `SUPABASE_BUCKET` are all set.
+multer still writes to disk first; `persistUploads` (middleware after multer)
+then uploads to Supabase and replaces the stored name with a ref
+`supabase:<object path>`. (Refs starting `appwrite:` come from the removed
+Appwrite backend; downloading one returns 410 Gone.) That ref is what lives in the
 `file_path` columns, and `send()` / `remove()` pick the backend from the ref's
 prefix, so old local files keep working after switching. See [DEPLOY.md](DEPLOY.md).
 Other deployment switches: `SKIP_SEED`, `COOKIE_SECURE`, `TRUST_PROXY` (read in `index.js` / `routes/auth.js`).

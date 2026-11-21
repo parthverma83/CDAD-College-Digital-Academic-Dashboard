@@ -2,19 +2,19 @@
    CDAD backend :: fileStore.js
    Where uploaded submission files live. Two backends behind one API:
 
-   - local disk  (default)  -> backend/data/uploads/, stored ref = the file name
-   - Appwrite Storage       -> used when all four APPWRITE_* variables are set,
-                               stored ref = "appwrite:<fileId>"
+   - local disk        (default) -> backend/data/uploads/, stored ref = the file name
+   - Supabase Storage            -> used when all three SUPABASE_* variables are set,
+                                    stored ref = "supabase:<object path>"
 
    The ref goes into the existing file_path columns, so files saved before
-   Appwrite was switched on keep working: send()/remove() look at the ref's
+   Supabase was switched on keep working: send()/remove() look at the ref's
    prefix, not at the current setting.
 
-   Env (backend/.env, or real environment variables in Docker):
-     APPWRITE_ENDPOINT    e.g. https://appwrite.example.com/v1
-     APPWRITE_PROJECT_ID
-     APPWRITE_API_KEY     server key with the "files.read" and "files.write" scopes
-     APPWRITE_BUCKET_ID
+   Env (backend/.env, or real environment variables in Docker / Render):
+     SUPABASE_URL          e.g. https://abcdefghijklmnop.supabase.co
+     SUPABASE_SERVICE_KEY  the project's secret key (sb_secret_...) or legacy service_role key.
+                           Server-side only — never put it in the frontend.
+     SUPABASE_BUCKET       name of a PRIVATE Storage bucket, e.g. cdad-uploads
    ============================================================ */
 const path = require('node:path');
 const fs = require('node:fs');
@@ -26,43 +26,48 @@ const { DATA_DIR } = require('../config'); // also loads backend/.env
 const UPLOAD_DIR = path.join(DATA_DIR, 'uploads');
 if (!fs.existsSync(UPLOAD_DIR)) fs.mkdirSync(UPLOAD_DIR, { recursive: true });
 
-const PREFIX = 'appwrite:';
+const PREFIX = 'supabase:';
+// Refs written by the old Appwrite backend (removed). They can no longer be fetched.
+const LEGACY_APPWRITE_PREFIX = 'appwrite:';
 
 function config() {
-  const { APPWRITE_ENDPOINT, APPWRITE_PROJECT_ID, APPWRITE_API_KEY, APPWRITE_BUCKET_ID } = process.env;
-  if (!(APPWRITE_ENDPOINT && APPWRITE_PROJECT_ID && APPWRITE_API_KEY && APPWRITE_BUCKET_ID)) return null;
-  return {
-    endpoint: APPWRITE_ENDPOINT.replace(/\/+$/, ''), project: APPWRITE_PROJECT_ID,
-    key: APPWRITE_API_KEY, bucket: APPWRITE_BUCKET_ID
-  };
+  const { SUPABASE_URL, SUPABASE_SERVICE_KEY, SUPABASE_BUCKET } = process.env;
+  if (!(SUPABASE_URL && SUPABASE_SERVICE_KEY && SUPABASE_BUCKET)) return null;
+  return { url: SUPABASE_URL.replace(/\/+$/, ''), key: SUPABASE_SERVICE_KEY, bucket: SUPABASE_BUCKET };
 }
 
-const isAppwrite = () => !!config();
-const isRemoteRef = (ref) => typeof ref === 'string' && ref.startsWith(PREFIX);
+const isSupabase = () => !!config();
+const isRemoteRef = (ref) => typeof ref === 'string' && (ref.startsWith(PREFIX) || ref.startsWith(LEGACY_APPWRITE_PREFIX));
 
-function appwriteFetch(cfg, pathname, init = {}) {
-  return fetch(`${cfg.endpoint}${pathname}`, {
+/** Calls the Supabase Storage REST API for one object in the configured bucket. */
+function objectFetch(cfg, objectPath, init = {}) {
+  const encoded = objectPath.split('/').map(encodeURIComponent).join('/');
+  return fetch(`${cfg.url}/storage/v1/object/${encodeURIComponent(cfg.bucket)}/${encoded}`, {
     ...init,
-    headers: { 'X-Appwrite-Project': cfg.project, 'X-Appwrite-Key': cfg.key, ...(init.headers || {}) }
+    // Secret keys (sb_secret_...) are accepted as a Bearer token only when it equals the apikey header.
+    headers: { apikey: cfg.key, Authorization: `Bearer ${cfg.key}`, ...(init.headers || {}) }
   });
 }
 
-/** Uploads one multer file (already on disk) to Appwrite and returns its ref. */
-async function uploadToAppwrite(cfg, file) {
-  const fileId = crypto.randomBytes(9).toString('hex'); // 18 chars, valid Appwrite id
-  const form = new FormData();
-  form.append('fileId', fileId);
-  form.append('file', new Blob([await fs.promises.readFile(path.join(UPLOAD_DIR, file.filename))]), file.originalname);
-  const res = await appwriteFetch(cfg, `/storage/buckets/${cfg.bucket}/files`, { method: 'POST', body: form });
+/** Uploads one multer file (already on disk) to Supabase Storage and returns its ref. */
+async function uploadToSupabase(cfg, file) {
+  // Random object name, kept flat; the original name is stored separately in the DB.
+  const ext = path.extname(file.originalname || '').toLowerCase().replace(/[^.a-z0-9]/g, '');
+  const objectPath = `submissions/${crypto.randomBytes(12).toString('hex')}${ext}`;
+  const res = await objectFetch(cfg, objectPath, {
+    method: 'POST',
+    headers: { 'Content-Type': file.mimetype || 'application/octet-stream', 'x-upsert': 'false' },
+    body: await fs.promises.readFile(path.join(UPLOAD_DIR, file.filename))
+  });
   if (!res.ok) {
     const body = await res.json().catch(() => ({}));
-    throw new Error(`Appwrite upload failed (${res.status}): ${body.message || 'unknown error'}`);
+    throw new Error(`Supabase upload failed (${res.status}): ${body.message || body.error || 'unknown error'}`);
   }
-  return PREFIX + fileId;
+  return PREFIX + objectPath;
 }
 
 /**
- * Express middleware, placed right after multer. With Appwrite on, moves every uploaded
+ * Express middleware, placed right after multer. With Supabase on, moves every uploaded
  * file there and rewrites file.filename to the remote ref; handlers downstream then
  * store/delete/serve it exactly like a local name. On failure nothing is kept anywhere.
  */
@@ -73,7 +78,7 @@ async function persistUploads(req, res, next) {
   const uploaded = [];
   try {
     for (const f of files) {
-      const ref = await uploadToAppwrite(cfg, f);
+      const ref = await uploadToSupabase(cfg, f);
       uploaded.push(ref);
       fs.unlink(path.join(UPLOAD_DIR, f.filename), () => {});
       f.filename = ref;
@@ -90,11 +95,14 @@ async function persistUploads(req, res, next) {
 /** Best-effort delete of a stored file, local or remote. */
 async function remove(ref) {
   if (!ref) return;
-  if (isRemoteRef(ref)) {
+  if (ref.startsWith(LEGACY_APPWRITE_PREFIX)) return; // nothing to reach any more
+  if (ref.startsWith(PREFIX)) {
     const cfg = config();
     if (!cfg) return;
-    try { await appwriteFetch(cfg, `/storage/buckets/${cfg.bucket}/files/${ref.slice(PREFIX.length)}`, { method: 'DELETE' }); }
-    catch (e) { console.error('Appwrite delete failed:', e.message); }
+    try {
+      const res = await objectFetch(cfg, ref.slice(PREFIX.length), { method: 'DELETE' });
+      if (!res.ok && res.status !== 404) console.error(`Supabase delete failed (${res.status})`);
+    } catch (e) { console.error('Supabase delete failed:', e.message); }
     return;
   }
   fs.unlink(path.join(UPLOAD_DIR, ref), () => {});
@@ -105,11 +113,14 @@ async function remove(ref) {
  * browser instead of downloading (used by the exam-file preview).
  */
 async function send(res, ref, downloadName, opts = {}) {
-  if (isRemoteRef(ref)) {
+  if (ref.startsWith(LEGACY_APPWRITE_PREFIX)) {
+    return res.status(410).json({ error: 'This file was stored in the old Appwrite storage and is no longer available. Please re-upload it.' });
+  }
+  if (ref.startsWith(PREFIX)) {
     const cfg = config();
     if (!cfg) return res.status(503).json({ error: 'File storage is not configured on this server.' });
-    const upstream = await appwriteFetch(cfg, `/storage/buckets/${cfg.bucket}/files/${ref.slice(PREFIX.length)}/download`);
-    if (!upstream.ok) return res.status(upstream.status === 404 ? 404 : 502).json({ error: 'File could not be retrieved.' });
+    const upstream = await objectFetch(cfg, ref.slice(PREFIX.length));
+    if (!upstream.ok) return res.status(upstream.status === 404 || upstream.status === 400 ? 404 : 502).json({ error: 'File could not be retrieved.' });
     res.setHeader('Content-Type', opts.contentType || upstream.headers.get('content-type') || 'application/octet-stream');
     res.setHeader('Content-Disposition', opts.inline ? 'inline' : `attachment; filename*=UTF-8''${encodeURIComponent(downloadName)}`);
     res.setHeader('X-Content-Type-Options', 'nosniff');
@@ -125,4 +136,4 @@ async function send(res, ref, downloadName, opts = {}) {
   return res.download(full, downloadName);
 }
 
-module.exports = { UPLOAD_DIR, isAppwrite, isRemoteRef, persistUploads, remove, send };
+module.exports = { UPLOAD_DIR, isSupabase, isRemoteRef, persistUploads, remove, send };

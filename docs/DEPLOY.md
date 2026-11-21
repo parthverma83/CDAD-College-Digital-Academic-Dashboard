@@ -22,7 +22,7 @@ docker compose down             # stop; data stays in the cdad-data volume
 ```
 
 Everything lives in the `cdad-data` volume (`/app/server/data`): the SQLite
-database and, unless you use Appwrite, the uploaded files. **Back it up**:
+database and, unless you use Supabase Storage, the uploaded files. **Back it up**:
 
 ```bash
 docker run --rm -v cdad-data:/data -v "$PWD":/backup alpine \
@@ -37,7 +37,7 @@ docker run --rm -v cdad-data:/data -v "$PWD":/backup alpine \
 | `SKIP_SEED=true` | **Use this for a real deployment.** Skips the demo students/faculty. The default admin is still created |
 | `COOKIE_SECURE=true` | Send the login cookie only over HTTPS (turn on once you have TLS) |
 | `TRUST_PROXY=true` | Trust `X-Forwarded-*` headers from your reverse proxy |
-| `APPWRITE_*` | Optional file storage in Appwrite — section 4 |
+| `SUPABASE_*` | Optional file storage in Supabase Storage — section 4 |
 
 Never commit `.env` (it is gitignored).
 
@@ -69,37 +69,39 @@ cdad.example.com {
 
 Sessions are kept in memory, so restarting the container logs everyone out.
 
-## 4. Optional: store uploaded files in Appwrite
+## 4. Optional: store uploaded files in Supabase Storage
 
 By default submitted files (project submissions and TA1/TA2/EndSem uploads)
-are saved on the server's disk. To keep them in an Appwrite Storage bucket
+are saved on the server's disk. To keep them in a Supabase Storage bucket
 instead:
 
-1. Have an Appwrite instance. To self-host, follow Appwrite's installation
-   guide (https://appwrite.io/docs/advanced/self-hosting) — ideally on the
-   same server or network as CDAD. Appwrite Cloud also works.
-2. In the Appwrite console: create a **project**, then a **Storage bucket**
-   (allow the file extensions `pdf, ppt, pptx, csv, doc, docx` and a max file
-   size of at least 10 MB), then an **API key** with the `files.read` and
-   `files.write` scopes.
-3. Put the four values in `.env`:
+1. Create a project at https://supabase.com (the free plan is enough).
+2. **Storage → New bucket**: name it `cdad-uploads`, leave **Public bucket OFF**,
+   and optionally set the file size limit to 10 MB.
+3. **Project Settings → API Keys**: copy the **secret** key (`sb_secret_...`; on
+   older projects the `service_role` key). The project URL
+   (`https://<ref>.supabase.co`) is on the project's home page / Data API settings.
+4. Put the three values in `.env`:
 
    ```
-   APPWRITE_ENDPOINT=https://appwrite.example.com/v1
-   APPWRITE_PROJECT_ID=...
-   APPWRITE_API_KEY=...
-   APPWRITE_BUCKET_ID=...
+   SUPABASE_URL=https://<ref>.supabase.co
+   SUPABASE_SERVICE_KEY=sb_secret_...
+   SUPABASE_BUCKET=cdad-uploads
    ```
-4. `docker compose up -d --build`. New uploads go to Appwrite; the database
-   stores a reference like `appwrite:<fileId>`.
+5. `docker compose up -d --build` (or restart `npm start`). New uploads go to
+   Supabase; the database stores a reference like `supabase:submissions/<id>.pdf`.
+
+Supabase pauses free projects after about a week with no activity. If uploads
+start failing with "Could not store the file", restore the project from the
+Supabase dashboard.
 
 Notes:
 - **Existing files are not moved.** Files uploaded before switching on
-  Appwrite stay on local disk and keep working (the reference tells the
+  Supabase stay on local disk and keep working (the reference tells the
   server where each file is). Keep the volume until those are no longer needed.
-- Students and faculty never talk to Appwrite directly — every download goes
+- Students and faculty never talk to Supabase directly — every download goes
   through CDAD's own permission checks, so the bucket can stay private.
-- If Appwrite is unreachable when a student uploads, the upload is rejected
+- If Supabase is unreachable when a student uploads, the upload is rejected
   with a clear error (nothing is half-saved).
 - The database itself stays in SQLite; only files move.
 
@@ -110,7 +112,7 @@ Notes:
 1. Push the repo to GitHub (already done for `backend-migration`; use whichever branch you want live).
 2. Render dashboard → **New → Blueprint** → connect the GitHub repo and branch.
 3. Render reads `render.yaml` and asks for the three values marked `sync: false`:
-   `APPWRITE_PROJECT_ID`, `APPWRITE_BUCKET_ID`, `APPWRITE_API_KEY`. Paste them there
+   `SUPABASE_URL` and `SUPABASE_SERVICE_KEY` (`SUPABASE_BUCKET` is preset to `cdad-uploads`). Paste them there
    (not in git). Leave them empty to keep files on the disk instead.
 4. Create. The first build takes a few minutes. You get a `https://cdad-xxxx.onrender.com` address.
 5. Open it, log in on the **Admin** tab (`ADMIN001` / `admin123`), click
@@ -128,4 +130,4 @@ Important:
 
 **Railway / Fly.io** work the same way: build from the `Dockerfile`, attach a volume
 mounted at `/app/server/data`, run a single instance, and set the same environment
-variables (`SKIP_SEED`, `COOKIE_SECURE`, `TRUST_PROXY`, `APPWRITE_*`).
+variables (`SKIP_SEED`, `COOKIE_SECURE`, `TRUST_PROXY`, `SUPABASE_*`).

@@ -11,7 +11,7 @@ const fs = require('node:fs');
 const multer = require('multer');
 
 // Multer always writes to local disk first; fileStore.persistUploads then moves the file to
-// Appwrite when that is configured (see fileStore.js).
+// Supabase Storage when that is configured (see fileStore.js).
 const { UPLOAD_DIR, remove } = require('./fileStore');
 
 const ALLOWED_EXTENSIONS = ['.pdf', '.ppt', '.pptx', '.csv', '.doc', '.docx'];
@@ -38,7 +38,7 @@ const upload = multer({
   }
 });
 
-/** Best-effort delete of a stored file (local name or Appwrite ref). */
+/** Best-effort delete of a stored file (local name or Supabase ref). */
 const deleteUploadedFile = remove;
 
 module.exports = { upload, UPLOAD_DIR, deleteUploadedFile, ALLOWED_EXTENSIONS, MAX_FILE_SIZE };

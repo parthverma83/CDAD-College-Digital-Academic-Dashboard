@@ -304,13 +304,13 @@ CBAD-project/
 │   │   ├── seed.js           demo data (version-gated)
 │   │   ├── routes/           one router per resource (auth, students, groups, marks, ...)
 │   │   └── lib/              sessions (+ requireRole), serializers, notify, groupOps,
-│   │                         fileStore (local disk / Appwrite), upload, captcha, format
+│   │                         fileStore (local disk / Supabase Storage), upload, captcha, format
 │   ├── test/                 API tests (npm test)
 │   ├── data/                 cdad.db + uploads — created on first run, git-ignored
 │   ├── .env                  optional settings, git-ignored (see ../.env.example)
 │   └── package.json
 │
-├── docs/                     BACKEND.md (API reference), DEPLOY.md (Docker / Render / Appwrite)
+├── docs/                     BACKEND.md (API reference), DEPLOY.md (Docker / Render / Supabase)
 ├── Dockerfile, docker-compose.yml, render.yaml     deployment
 ├── package.json              convenience scripts: npm start / npm run dev / npm test
 └── README.md
@@ -319,7 +319,7 @@ CBAD-project/
 Run it from the project root: `cd backend && npm install` once, then `npm start`
 in `backend/` (or `npm start` / `npm run dev` / `npm test` from the root).
 
-To put it online with Docker (and optionally keep uploaded files in Appwrite),
+To put it online with Docker (and optionally keep uploaded files in Supabase Storage),
 see [DEPLOY.md](docs/DEPLOY.md).
 
 The full backend reference (roles, every endpoint, rules the server enforces)

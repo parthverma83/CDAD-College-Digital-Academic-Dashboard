@@ -18,11 +18,9 @@ services:
         value: "true"
       - key: TRUST_PROXY
         value: "true"
-      - key: APPWRITE_ENDPOINT
-        value: https://fra.cloud.appwrite.io/v1
-      - key: APPWRITE_PROJECT_ID
+      - key: SUPABASE_URL       # Supabase Storage for uploaded files (docs/DEPLOY.md section 4)
         sync: false             # asked for in the Render dashboard, never stored in git
-      - key: APPWRITE_BUCKET_ID
+      - key: SUPABASE_SERVICE_KEY
         sync: false
-      - key: APPWRITE_API_KEY
-        sync: false
+      - key: SUPABASE_BUCKET
+        value: cdad-uploads
