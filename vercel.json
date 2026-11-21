@@ -1,13 +1,11 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "framework": null,
-  "installCommand": "npm ci --prefix backend --omit=dev",
+  "installCommand": "cd backend && npm ci --omit=dev",
   "buildCommand": "echo 'static frontend, no build step'",
   "outputDirectory": "frontend",
+  "regions": ["sin1"],
   "rewrites": [
-    {
-      "source": "/api/:path*",
-      "destination": "/api"
-    }
+    { "source": "/api/:path*", "destination": "/api" }
   ]
 }
