@@ -4,8 +4,10 @@
   "installCommand": "npm ci --prefix backend --omit=dev",
   "buildCommand": "echo 'static frontend, no build step'",
   "outputDirectory": "frontend",
-  "regions": ["sin1"],
   "rewrites": [
-    { "source": "/api/:path*", "destination": "/api" }
+    {
+      "source": "/api/:path*",
+      "destination": "/api"
+    }
   ]
 }
