@@ -1,8 +1,10 @@
-# CDAD — one container: Express API + static frontend + SQLite.
+# CDAD — one container: Express API + static frontend.
+# Database: Supabase Postgres when DATABASE_URL is set, otherwise a SQLite file in the cdad-data volume.
 #   docker compose up -d --build      start (or rebuild after pulling changes)
 #   docker compose logs -f cdad       watch the logs
-#   docker compose down               stop (data is kept in the cdad-data volume)
-# Settings go in a file named .env next to this one — copy .env.example and edit.
+#   docker compose down               stop (data is kept in Supabase / the cdad-data volume)
+# Settings: backend/.env (shared with `npm start`) and/or a .env next to this file
+# (copy .env.example). Values in the second file win.
 services:
   cdad:
     build: .
@@ -11,12 +13,14 @@ services:
     ports:
       - "${PORT:-3000}:3000"
     env_file:
+      - path: backend/.env
+        required: false
       - path: .env
         required: false
     environment:
       PORT: "3000"
     volumes:
-      - cdad-data:/app/server/data   # SQLite file + (local-disk) uploads
+      - cdad-data:/app/server/data   # SQLite mode: database + uploads; Supabase mode: temp upload files only
 
 volumes:
   cdad-data:
