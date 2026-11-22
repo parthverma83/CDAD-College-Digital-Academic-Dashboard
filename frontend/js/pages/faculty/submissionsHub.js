@@ -1,4 +1,35 @@
 /* ================= Submissions Hub — every submission, one place ================= */
+/* Division filter (top right), shared by the project and exam tables:
+   'ALL', '__NONE__' (groups without a division) or a division code like CC1. */
+let submissionDivisionFilter = 'ALL';
+
+/** Fills the Division dropdown from the current groups and returns a predicate for group displayIds. */
+function syncSubmissionDivisionFilter(groups) {
+  const sel = document.getElementById('submissionDivisionFilter');
+  const divisions = groupDivisions(groups);
+  const noDivision = groups.filter((g) => !g.division).length;
+  // The chosen division can disappear (its groups deleted or moved) — fall back to All.
+  if (submissionDivisionFilter === '__NONE__' ? !(noDivision && divisions.length)
+    : submissionDivisionFilter !== 'ALL' && !divisions.includes(submissionDivisionFilter)) submissionDivisionFilter = 'ALL';
+  if (sel) {
+    sel.innerHTML = `<option value="ALL">All divisions (${groups.length} groups)</option>`
+      + divisions.map((d) => `<option value="${escapeHtml(d)}">${escapeHtml(d)} (${groups.filter((g) => g.division === d).length})</option>`).join('')
+      + (noDivision && divisions.length ? `<option value="__NONE__">No division (${noDivision})</option>` : '');
+    sel.value = submissionDivisionFilter;
+    sel.onchange = async () => {
+      submissionDivisionFilter = sel.value;
+      await renderSubmissionsHub();
+      await renderExamSubmissions();
+    };
+  }
+  const divisionOf = new Map(groups.map((g) => [g.displayId, g.division || '']));
+  return (groupDisplayId) => {
+    if (submissionDivisionFilter === 'ALL') return true;
+    const d = divisionOf.get(groupDisplayId) || '';
+    return submissionDivisionFilter === '__NONE__' ? !d : d === submissionDivisionFilter;
+  };
+}
+
 async function renderSubmissionsHub() {
   const host = document.getElementById('submissionsTableBody');
   if (!host) return;
@@ -10,7 +41,9 @@ async function renderSubmissionsHub() {
   }
   const statusFilter = statusFilterEl?.value || '';
 
-  let submissions = await allSubmissions();
+  const [allSubs, groups] = await Promise.all([allSubmissions(), getData(CDAD_KEYS.GROUPS)]);
+  const inDivision = syncSubmissionDivisionFilter(groups);
+  let submissions = allSubs.filter((p) => inDivision(p.group));
   if (statusFilter) submissions = submissions.filter((p) => p.submission.status === statusFilter);
 
   const countLabel = document.getElementById('submissionCountLabel');
@@ -79,10 +112,12 @@ async function renderExamSubmissions() {
       await renderExamSubmissions();
     });
   }
-  const forExam = submissions.filter((s) => s.exam === currentExam);
+  const inDivision = syncSubmissionDivisionFilter(groups);
+  const forExam = submissions.filter((s) => s.exam === currentExam && inDivision(s.group));
   const byGroup = new Map(forExam.map((s) => [s.group, s]));
-  const rows = groups.filter((g) => (g.members || []).length || byGroup.has(g.displayId));
-  document.getElementById('examCountLabel').textContent = `${EXAM_LABELS[currentExam]}: ${forExam.length} of ${rows.length} groups submitted`;
+  const rows = groups.filter((g) => inDivision(g.displayId) && ((g.members || []).length || byGroup.has(g.displayId)));
+  const scope = submissionDivisionFilter === 'ALL' ? '' : submissionDivisionFilter === '__NONE__' ? ' (no division)' : ` in ${submissionDivisionFilter}`;
+  document.getElementById('examCountLabel').textContent = `${EXAM_LABELS[currentExam]}: ${forExam.length} of ${rows.length} groups${scope} submitted`;
 
   host.innerHTML = rows.length ? rows.map((g) => {
     const s = byGroup.get(g.displayId);
