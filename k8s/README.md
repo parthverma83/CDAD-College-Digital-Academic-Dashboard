@@ -31,6 +31,23 @@ SQLite file on the volume instead. In that case set `replicas: 1`.
 
 3. Open **http://localhost:8080**.
 
+### On a kind cluster (e.g. `kind create cluster --name local`)
+
+kind runs Kubernetes inside a Docker container, so it can't see images built by
+Docker, and it has no load balancer. Load the image after every build, and
+reach the app through a port-forward:
+
+```bash
+docker compose build
+docker save cbad-project-cdad:latest | docker exec -i local-control-plane ctr -n k8s.io images import -
+#   (or, with the kind CLI: kind load docker-image cbad-project-cdad:latest --name local)
+kubectl -n cdad create secret generic cdad-env --from-env-file=backend/.env --dry-run=client -o yaml | kubectl apply -f -
+kubectl apply -k k8s
+kubectl -n cdad port-forward svc/cdad 8080:8080     # keep this running, then open http://localhost:8080
+```
+
+The Service's `EXTERNAL-IP` stays `<pending>` on kind. That is expected; the port-forward replaces it.
+
 ## Everyday commands
 
 ```bash
