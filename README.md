@@ -66,17 +66,6 @@ Open **http://localhost:3000** (or set `PORT=...` before `npm start` to use a
 different port). The server seeds demo data into `backend/data/cdad.db`
 automatically on first run.
 
-## Login
-
-**Login is always by ID — never by email.** Email is stored on each record
-for reference only.
-
-| Role    | Login ID        | Password     |
-|---------|------------------|--------------|
-| Admin   | `ADMIN001`       | `admin123`   |
-| Faculty | `FAC001`         | `faculty123` |
-| Student | Enrollment No. (e.g. `ADT24SOCB0001`) | `PASS123` (default) |
-
 > The default admin is created automatically on first run (`backend/src/db.js`).
 > **Change its password** (Admin Panel → 🔑 Change Password) before sharing the app — admin passwords can't be
 > reset from the login page.
