@@ -29,15 +29,34 @@ async function renderPresentations() {
 
 function openAddPresentationModal() { openPresentationModal(null); }
 
+const BULK_ALL = '__ALL__';
+const BULK_DIV = '__DIV__:';
+
 function openPresentationModal(pres) {
   allGroups().then((groups) => {
     const isoDate = (d) => (d ? new Date(d).toISOString().slice(0, 10) : '');
+    // New schedules can target every group, or every group in one division, in a single submit.
+    const divisions = [...new Set(groups.map((g) => g.division).filter(Boolean))].sort();
+    const bulkOptions = pres || groups.length < 2 ? '' : `
+      <optgroup label="Many groups at once">
+        <option value="${BULK_ALL}">All groups (${groups.length})</option>
+        ${divisions.map((d) => `<option value="${BULK_DIV}${escapeHtml(d)}">All groups in ${escapeHtml(d)} (${groups.filter((g) => g.division === d).length})</option>`).join('')}
+      </optgroup>
+      <optgroup label="One group">`;
     openModal(pres ? 'Edit Presentation' : 'Schedule Presentation', `
       <form id="presForm">
         <div class="form-grid">
           <div class="field full">
             <label>Group</label>
-            <select name="group" required>${groups.map((g) => `<option value="${g.displayId}" ${pres?.group===g.displayId?'selected':''}>${g.displayId} — ${escapeHtml(g.name)}</option>`).join('')}</select>
+            <select name="group" id="presGroupSelect" required>${bulkOptions}${groups.map((g) => `<option value="${g.displayId}" ${pres?.group===g.displayId?'selected':''}>${g.displayId} — ${escapeHtml(g.name)}</option>`).join('')}${bulkOptions ? '</optgroup>' : ''}</select>
+          </div>
+          <div class="field" id="presBulkGap" style="display:none;">
+            <label>Minutes between groups</label>
+            <input type="number" name="gapMinutes" min="0" max="240" step="5" value="0">
+            <div class="faint" style="font-size:12px;margin-top:4px;">0 = same time for every group; e.g. 15 gives 10:00, 10:15, 10:30, …</div>
+          </div>
+          <div class="field" id="presBulkSkip" style="display:none;align-self:center;">
+            <label class="checkbox-row" style="margin-top:22px;"><input type="checkbox" name="skipExisting" checked> Skip groups that already have a presentation</label>
           </div>
           <div class="field"><label>Date</label><input type="date" name="date" required value="${isoDate(pres?.date)}"></div>
           <div class="field"><label>Time</label><input type="time" name="time" required value="${escapeHtml(pres?.time || '10:00')}"></div>
@@ -56,10 +75,37 @@ function openPresentationModal(pres) {
     `, {
       onMount: () => {
         document.getElementById('cancelPresForm').addEventListener('click', closeModal);
+        const groupSelect = document.getElementById('presGroupSelect');
+        const isBulk = (v) => v === BULK_ALL || v.startsWith(BULK_DIV);
+        const syncBulkFields = () => {
+          const show = isBulk(groupSelect.value) ? '' : 'none';
+          document.getElementById('presBulkGap').style.display = show;
+          document.getElementById('presBulkSkip').style.display = show;
+        };
+        groupSelect.addEventListener('change', syncBulkFields);
+        syncBulkFields();
+
         document.getElementById('presForm').addEventListener('submit', async (e) => {
           e.preventDefault();
           const fd = new FormData(e.target);
           const fields = { group: fd.get('group'), date: new Date(fd.get('date')).toISOString(), time: fd.get('time'), venue: fd.get('venue').trim(), status: fd.get('status'), notes: fd.get('notes').trim(), faculty: FAC.displayId };
+
+          if (!pres && isBulk(fields.group)) {
+            const division = fields.group.startsWith(BULK_DIV) ? fields.group.slice(BULK_DIV.length) : null;
+            const targets = groups.filter((g) => !division || g.division === division).map((g) => g.displayId);
+            const result = await createPresentationsBulk({
+              ...fields, groups: targets,
+              gapMinutes: Number(fd.get('gapMinutes') || 0),
+              skipExisting: fd.get('skipExisting') === 'on'
+            });
+            if (result.error) { showToast(result.error, 'error'); return; }
+            closeModal();
+            const skippedNote = result.skipped.length ? ` · ${result.skipped.length} skipped (already scheduled)` : '';
+            showToast(`Scheduled ${result.created} presentation(s)${skippedNote}`, result.created ? 'success' : 'info');
+            await renderAll();
+            return;
+          }
+
           if (pres) await editPresentation(pres.id, fields);
           else await createPresentation(fields);
           closeModal();

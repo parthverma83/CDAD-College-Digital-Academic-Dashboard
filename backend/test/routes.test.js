@@ -216,6 +216,34 @@ test('presentations: schedule, edit, reschedule, cancel, complete, delete', asyn
   ok(await api('DELETE', `/presentations/${pr.data.id}`, { jar: fac }), 'delete');
 });
 
+test('presentations: bulk scheduling for many groups at once', async () => {
+  const fac = await login('faculty', 'FAC001', 'faculty123');
+  const mk = async (name) => (await api('POST', '/groups', { jar: fac, json: { name, division: 'BK1' } })).data.displayId;
+  const g1 = await mk('Bulk A'), g2 = await mk('Bulk B'), g3 = await mk('Bulk C');
+  const body = { groups: [g3, g1, g2, 'NOPE'], date: '2030-05-05T00:00:00.000Z', time: '10:00', venue: 'Lab 4', faculty: 'FAC001', gapMinutes: 15 };
+  assert.equal((await api('POST', '/presentations/bulk', { jar: fac, json: { ...body, time: '25:00' } })).status, 400);
+  assert.equal((await api('POST', '/presentations/bulk', { jar: fac, json: { ...body, venue: ' ' } })).status, 400);
+  assert.equal((await api('POST', '/presentations/bulk', { jar: fac, json: { ...body, time: '23:50' } })).status, 400); // runs past midnight
+  const stu = await login('student', 'ADT24SOCB0001', 'PASS123');
+  assert.equal((await api('POST', '/presentations/bulk', { jar: stu, json: body })).status, 401);
+
+  const r = await api('POST', '/presentations/bulk', { jar: fac, json: body });
+  assert.equal(r.status, 201);
+  assert.equal(r.data.created, 3);
+  assert.deepEqual(r.data.presentations.map((p) => `${p.group}@${p.time}`), [`${g1}@10:00`, `${g2}@10:15`, `${g3}@10:30`]);
+  const all = (await api('GET', '/presentations', { jar: fac })).data.filter((p) => [g1, g2, g3].includes(p.group));
+  assert.equal(all.length, 3);
+  assert.ok(all.every((p) => p.venue === 'Lab 4' && p.faculty === 'FAC001'));
+
+  // running it again skips the groups that are already scheduled
+  const again = await api('POST', '/presentations/bulk', { jar: fac, json: body });
+  assert.equal(again.data.created, 0);
+  assert.deepEqual(again.data.skipped.sort(), [g1, g2, g3].sort());
+  // ...unless asked not to skip
+  const dup = await api('POST', '/presentations/bulk', { jar: fac, json: { ...body, groups: [g1], skipExisting: false } });
+  assert.equal(dup.data.created, 1);
+});
+
 test('requests, announcements, notifications, activity', async () => {
   const fac = await login('faculty', 'FAC001', 'faculty123');
   const stu = await login('student', 'ADT24SOCB0002', 'PASS123');

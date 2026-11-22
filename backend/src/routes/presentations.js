@@ -40,6 +40,70 @@ router.post('/', requireRole('faculty'), async (req, res) => {
   res.status(201).json(await serializePresentation(await getRow(info.lastInsertRowid)));
 });
 
+/**
+ * Schedule many groups in one go. Body: { groups: [groupDisplayId, ...], date, time ("HH:MM"),
+ * venue, status?, notes?, faculty?, gapMinutes? (0 = same slot for everyone), skipExisting? }.
+ * Group i gets time + i × gapMinutes. With skipExisting (default true), groups that already have a
+ * presentation that isn't cancelled or completed are left alone. Returns { created, skipped }.
+ */
+router.post('/bulk', requireRole('faculty'), async (req, res) => {
+  const d = req.body || {};
+  const wanted = [...new Set((Array.isArray(d.groups) ? d.groups : []).map(String))];
+  if (!wanted.length) return res.status(400).json({ error: 'Choose at least one group.' });
+  if (!d.date || Number.isNaN(new Date(d.date).getTime())) return res.status(400).json({ error: 'A valid date is required.' });
+  const m = /^(\d{1,2}):(\d{2})$/.exec(String(d.time || ''));
+  if (!m || Number(m[1]) > 23 || Number(m[2]) > 59) return res.status(400).json({ error: 'A valid start time is required.' });
+  if (!String(d.venue || '').trim()) return res.status(400).json({ error: 'Venue is required.' });
+  const gap = Number(d.gapMinutes || 0);
+  if (!Number.isInteger(gap) || gap < 0 || gap > 240) return res.status(400).json({ error: 'Minutes between groups must be a whole number from 0 to 240.' });
+  const skipExisting = d.skipExisting !== false;
+
+  // Resolve groups in a stable order (G01, G02, ...), dropping unknown ids.
+  const rows = [];
+  for (const id of wanted) {
+    const g = await db.prepare('SELECT id, display_id FROM student_groups WHERE display_id = ?').get(id);
+    if (g) rows.push(g);
+  }
+  rows.sort((a, b) => a.display_id.localeCompare(b.display_id, undefined, { numeric: true }));
+  if (!rows.length) return res.status(400).json({ error: 'None of the chosen groups exist.' });
+
+  const start = Number(m[1]) * 60 + Number(m[2]);
+  const skipped = [];
+  const todo = [];
+  for (const g of rows) {
+    const active = skipExisting && await db.prepare(
+      "SELECT 1 AS x FROM presentations WHERE group_id = ? AND status NOT IN ('Cancelled', 'Completed')").get(g.id);
+    if (active) skipped.push(g.display_id); else todo.push(g);
+  }
+  const last = start + gap * Math.max(0, todo.length - 1);
+  if (last > 23 * 60 + 59) return res.status(400).json({ error: `With ${gap} minutes between ${todo.length} groups the last slot would run past midnight. Use a smaller gap or an earlier start.` });
+
+  const facultyId = d.faculty ? await facultyIdByDisplayId(d.faculty) : null;
+  const hhmm = (mins) => `${String(Math.floor(mins / 60)).padStart(2, '0')}:${String(mins % 60).padStart(2, '0')}`;
+  const created = [];
+  await db.transaction(async () => {
+    for (const [i, g] of todo.entries()) {
+      const displayId = await nextSequentialId('presentations', 'PRE', 3);
+      const proj = await db.prepare('SELECT id FROM projects WHERE group_id = ?').get(g.id);
+      const time = hhmm(start + i * gap);
+      const info = await db.prepare(`
+        INSERT INTO presentations (display_id, group_id, project_id, date, time, venue, faculty_id, status, notes)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `).run(displayId, g.id, proj ? proj.id : null, d.date, time, String(d.venue).trim(), facultyId, d.status || 'Scheduled', d.notes || '');
+      created.push({ id: info.lastInsertRowid, group: g.display_id, time });
+    }
+  });
+  for (const c of created) {
+    await createNotification({
+      title: 'Presentation Scheduled',
+      message: `A presentation for ${c.group} has been scheduled on ${formatDate(d.date)} at ${c.time}.`,
+      type: 'presentation', recipient: c.group
+    });
+  }
+  await logActivity(`Presentations scheduled for ${created.length} group(s) on ${formatDate(d.date)}${skipped.length ? ` (${skipped.length} skipped)` : ''}`);
+  res.status(201).json({ created: created.length, skipped, presentations: created });
+});
+
 router.put('/:id', requireRole('faculty'), async (req, res) => {
   const row = await getRow(req.params.id);
   if (!row) return res.status(404).json({ error: 'Not found' });

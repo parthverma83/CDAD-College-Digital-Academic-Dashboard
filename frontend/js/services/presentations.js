@@ -17,6 +17,17 @@ async function createPresentation(data) {
   return addData(CDAD_KEYS.PRESENTATIONS, data);
 }
 
+/** Schedules many groups at once. data: { groups: [displayId], date, time, venue, status, notes,
+    faculty, gapMinutes, skipExisting }. Returns { created, skipped } or { error }. */
+async function createPresentationsBulk(data) {
+  const res = await fetch('/api/presentations/bulk', {
+    method: 'POST', credentials: 'include',
+    headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data)
+  });
+  const body = await res.json().catch(() => ({}));
+  return res.ok ? body : { error: body.error || 'Could not schedule the presentations.' };
+}
+
 async function editPresentation(id, updates) {
   return updateData(CDAD_KEYS.PRESENTATIONS, id, updates);
 }
