@@ -45,8 +45,23 @@
       </div>
       <div class="stat-grid" id="overviewStats"></div>
       <div class="section">
-        <div class="section__head"><h3>Group Progress</h3></div>
-        <div class="bar-chart" id="groupProgressChart"></div>
+        <div class="section__head"><h3>Division Overview</h3><span class="faint" style="font-size:12.5px;">Click a division to open its submissions</span></div>
+        <div class="table-wrap">
+          <table class="data-table">
+            <thead><tr><th>Division</th><th>Groups</th><th>Students</th><th>TA1</th><th>TA2</th><th>End Sem</th><th>Presentations</th></tr></thead>
+            <tbody id="divisionOverviewBody"></tbody>
+          </table>
+        </div>
+      </div>
+      <div class="dash-grid dash-grid--2">
+        <div class="section">
+          <div class="section__head"><h3>Upcoming</h3></div>
+          <div class="notif-mini-list" id="overviewUpcoming"></div>
+        </div>
+        <div class="section">
+          <div class="section__head"><h3>Recent Activity</h3><a class="section__link" href="#" onclick="showView('activity'); return false;">View all</a></div>
+          <div class="notif-mini-list" id="overviewActivity"></div>
+        </div>
       </div>
       <div class="section">
         <div class="section__head"><h3>Project Status Breakdown</h3></div>
