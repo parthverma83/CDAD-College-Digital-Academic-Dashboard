@@ -1,0 +1,13 @@
+# Persistent volume for /app/server/data (the Kubernetes counterpart of the Docker volume).
+# With DATABASE_URL (Supabase) it only holds upload files on their way to Supabase Storage;
+# without it, it holds the SQLite database too (then keep replicas at 1).
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: cdad-data
+  namespace: cdad
+spec:
+  accessModes: ["ReadWriteOnce"]
+  resources:
+    requests:
+      storage: 1Gi

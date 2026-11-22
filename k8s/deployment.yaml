@@ -1,0 +1,50 @@
+# The CDAD app: Express API + static frontend, the same image Docker Compose builds.
+# Sessions and captchas live in the database, so with DATABASE_URL set the pods are
+# stateless and can run as several replicas behind the Service.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cdad
+  namespace: cdad
+  labels: { app: cdad }
+spec:
+  replicas: 2
+  selector:
+    matchLabels: { app: cdad }
+  template:
+    metadata:
+      labels: { app: cdad }
+    spec:
+      containers:
+        - name: cdad
+          image: cbad-project-cdad:latest   # built by `docker compose build` (Docker Desktop shares its images with Kubernetes)
+          imagePullPolicy: Never            # local image: never try to pull it from a registry
+          ports:
+            - containerPort: 3000
+          envFrom:
+            - secretRef:
+                name: cdad-env                # DATABASE_URL, SUPABASE_* — created from backend/.env, never committed
+          env:
+            - name: PORT
+              value: "3000"
+            - name: SKIP_SEED                 # never create or reset demo data in this deployment
+              value: "true"
+          volumeMounts:
+            - name: data
+              mountPath: /app/server/data
+          readinessProbe:                     # only send traffic once the API answers
+            httpGet: { path: /api/auth/me, port: 3000 }
+            initialDelaySeconds: 3
+            periodSeconds: 10
+          livenessProbe:                      # restart the pod if it stops answering
+            httpGet: { path: /api/auth/me, port: 3000 }
+            initialDelaySeconds: 15
+            periodSeconds: 30
+            failureThreshold: 3
+          resources:
+            requests: { cpu: 50m, memory: 128Mi }
+            limits: { cpu: 500m, memory: 512Mi }
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: cdad-data

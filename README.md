@@ -24,7 +24,7 @@ in plaintext.
 - Supabase Storage for uploaded files (optional; local disk otherwise)
 - Deployable to **Vercel** (frontend on the CDN, API as a serverless function) — see [DEPLOY.md](docs/DEPLOY.md#0-vercel--supabase)
 - `bcryptjs` for password hashing, HttpOnly session cookies for auth
-- Docker (single Node container, no separate reverse proxy needed)
+- Docker (single Node container, no separate reverse proxy needed) and Kubernetes manifests in [`k8s/`](k8s/README.md)
 
 ## Quick Start (Docker)
 
@@ -316,6 +316,7 @@ CBAD-project/
 │   └── package.json
 │
 ├── docs/                     BACKEND.md (API reference), DEPLOY.md (Vercel + Supabase / Docker / Render)
+├── k8s/                      Kubernetes: namespace, volume (PVC), 2-replica Deployment, LoadBalancer Service
 ├── vercel.json               Vercel: static frontend/, /api rewrite, region
 ├── Dockerfile, docker-compose.yml, render.yaml     container deployment
 ├── package.json              convenience scripts: npm start / npm run dev / npm test

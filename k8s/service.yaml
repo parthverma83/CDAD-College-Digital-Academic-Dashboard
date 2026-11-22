@@ -1,0 +1,14 @@
+# Exposes the pods. On Docker Desktop a LoadBalancer Service is published on localhost:8080
+# (port 3000 stays free for the Docker Compose container).
+apiVersion: v1
+kind: Service
+metadata:
+  name: cdad
+  namespace: cdad
+spec:
+  type: LoadBalancer
+  selector: { app: cdad }
+  ports:
+    - name: http
+      port: 8080
+      targetPort: 3000

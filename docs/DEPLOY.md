@@ -5,6 +5,8 @@ Two ways to run CDAD:
 - **Vercel + Supabase (recommended, free):** the frontend and the API run on
   Vercel, and all data lives in Supabase (Postgres database + Storage bucket).
   See section 0.
+- **Kubernetes:** the same image as 2 replicas behind a LoadBalancer, with a
+  persistent volume. See [k8s/README.md](../k8s/README.md).
 - **One Docker container** (sections 1–5): the Express API, the static
   frontend and a SQLite file on a persistent disk, on a VPS, a college server,
   or Render/Railway/Fly with a volume.
