@@ -73,6 +73,11 @@
 .mini-progress .bar-track { flex: 1; height: 7px; }
 .mini-progress span { font-size: 12px; font-weight: 700; color: var(--ink-soft); white-space: nowrap; }
 .division-row { cursor: pointer; }
+.division-row--total { cursor: default; }
+
+/* ---- Division tabs (Submissions page) ---- */
+.division-tabs-bar { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; padding: 14px 22px; }
+.division-tabs-bar__label { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--ink-faint); }
 .division-row--total td { font-weight: 700; background: var(--bg-soft, #f7f8fb); }
 
 /* ---- Progress stage checklist ---- */

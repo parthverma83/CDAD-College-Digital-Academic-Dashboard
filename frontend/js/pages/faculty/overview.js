@@ -62,7 +62,7 @@ async function renderOverview() {
       const cells = OVERVIEW_EXAMS.map((e) => `<td>${miniProgress(examSubs.filter((s) => s.exam === e && ids.has(s.group)).length, counted)}</td>`).join('');
       const presented = new Set(activePres.filter((p) => ids.has(p.group)).map((p) => p.group)).size;
       const isTotal = value === 'ALL';
-      return `<tr class="division-row${isTotal ? ' division-row--total' : ''}" data-division="${escapeHtml(value)}" title="Open ${escapeHtml(label)} submissions">
+      return `<tr class="division-row${isTotal ? ' division-row--total' : ''}" ${isTotal ? '' : `data-division="${escapeHtml(value)}" title="Open ${escapeHtml(label)} submissions"`}>
         <td><strong>${escapeHtml(label)}</strong></td><td>${list.length}</td><td>${studentsIn}</td>${cells}<td>${miniProgress(presented, counted)}</td></tr>`;
     };
     const noDivision = groups.filter((g) => !g.division);

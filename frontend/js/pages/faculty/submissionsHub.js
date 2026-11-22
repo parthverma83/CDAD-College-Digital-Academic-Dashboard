@@ -1,26 +1,29 @@
 /* ================= Submissions Hub — every submission, one place ================= */
-/* Division filter (top right), shared by the project and exam tables:
-   'ALL', '__NONE__' (groups without a division) or a division code like CC1. */
-let submissionDivisionFilter = 'ALL';
+/* Division tabs (CC1, CC2, …), shared by the project and exam tables. One division is shown at a
+   time — never every group at once. '__NONE__' = groups without a division; 'ALL' is used only
+   when no group has a division yet. */
+let submissionDivisionFilter = null;
 
-/** Fills the Division dropdown from the current groups and returns a predicate for group displayIds. */
+/** Draws the division tabs from the current groups and returns a predicate for group displayIds. */
 function syncSubmissionDivisionFilter(groups) {
-  const sel = document.getElementById('submissionDivisionFilter');
   const divisions = groupDivisions(groups);
   const noDivision = groups.filter((g) => !g.division).length;
-  // The chosen division can disappear (its groups deleted or moved) — fall back to All.
-  if (submissionDivisionFilter === '__NONE__' ? !(noDivision && divisions.length)
-    : submissionDivisionFilter !== 'ALL' && !divisions.includes(submissionDivisionFilter)) submissionDivisionFilter = 'ALL';
-  if (sel) {
-    sel.innerHTML = `<option value="ALL">All divisions (${groups.length} groups)</option>`
-      + divisions.map((d) => `<option value="${escapeHtml(d)}">${escapeHtml(d)} (${groups.filter((g) => g.division === d).length})</option>`).join('')
-      + (noDivision && divisions.length ? `<option value="__NONE__">No division (${noDivision})</option>` : '');
-    sel.value = submissionDivisionFilter;
-    sel.onchange = async () => {
-      submissionDivisionFilter = sel.value;
+  const tabs = divisions.map((d) => ({ value: d, label: d, count: groups.filter((g) => g.division === d).length }));
+  if (noDivision && divisions.length) tabs.push({ value: '__NONE__', label: 'No division', count: noDivision });
+  if (!tabs.length) tabs.push({ value: 'ALL', label: 'All groups', count: groups.length });
+  // First visit, or the chosen division disappeared (its groups deleted or moved): open the first one.
+  if (!tabs.some((t) => t.value === submissionDivisionFilter)) submissionDivisionFilter = tabs[0].value;
+
+  const host = document.getElementById('submissionDivisionTabs');
+  if (host) {
+    host.innerHTML = tabs.map((t) => `<button type="button" class="btn btn--sm ${t.value === submissionDivisionFilter ? 'btn--primary' : 'btn--ghost'}"
+      data-division-tab="${escapeHtml(t.value)}">${escapeHtml(t.label)} <span style="opacity:.7;">(${t.count})</span></button>`).join('');
+    host.querySelectorAll('[data-division-tab]').forEach((b) => b.addEventListener('click', async () => {
+      if (submissionDivisionFilter === b.dataset.divisionTab) return;
+      submissionDivisionFilter = b.dataset.divisionTab;
       await renderSubmissionsHub();
       await renderExamSubmissions();
-    };
+    }));
   }
   const divisionOf = new Map(groups.map((g) => [g.displayId, g.division || '']));
   return (groupDisplayId) => {
@@ -116,7 +119,7 @@ async function renderExamSubmissions() {
   const forExam = submissions.filter((s) => s.exam === currentExam && inDivision(s.group));
   const byGroup = new Map(forExam.map((s) => [s.group, s]));
   const rows = groups.filter((g) => inDivision(g.displayId) && ((g.members || []).length || byGroup.has(g.displayId)));
-  const scope = submissionDivisionFilter === 'ALL' ? '' : submissionDivisionFilter === '__NONE__' ? ' (no division)' : ` in ${submissionDivisionFilter}`;
+  const scope = submissionDivisionFilter === 'ALL' ? '' : submissionDivisionFilter === '__NONE__' ? ' without a division' : ` in ${submissionDivisionFilter}`;
   document.getElementById('examCountLabel').textContent = `${EXAM_LABELS[currentExam]}: ${forExam.length} of ${rows.length} groups${scope} submitted`;
 
   host.innerHTML = rows.length ? rows.map((g) => {
