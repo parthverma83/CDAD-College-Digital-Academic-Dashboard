@@ -54,47 +54,116 @@ function renderExamSubmissionCards(host, amLeader, { exams, submissions, deadlin
 function openExamSubmitModal(exam, existing) {
   openModal(`${existing ? 'Update' : 'Submit'} ${EXAM_LABELS[exam] || exam}`, `
     <form id="examSubmitForm">
-      <div class="login-error" id="examSubmitError"></div>
+      <div class="login-error" id="examSubmitError" role="alert"></div>
       <div class="field full" style="margin-bottom:14px;">
         <label>Link (Drive / PPT / repo — optional if attaching a file)</label>
         <input name="link" type="url" placeholder="https://..." value="${escapeHtml(existing?.link || '')}">
       </div>
       <div class="field full" style="margin-bottom:14px;">
-        <label>Attach files (up to ${EXAM_MAX_FILES} — PDF, PPT, CSV or DOC, max 10MB each)</label>
-        ${(existing?.files || []).map((f) => `
-          <label class="field-hint" style="display:flex; gap:8px; align-items:center; margin:4px 0;">
-            <input type="checkbox" data-keep-file="${f.id}" checked> ${escapeHtml(f.name)} <span class="faint">(${formatFileSize(f.size)})</span>
-          </label>`).join('')}
-        <input type="file" name="files" id="examFilesInput" multiple accept=".pdf,.ppt,.pptx,.csv,.doc,.docx">
-        <div class="field-hint" style="margin-top:6px;" id="examFilesHint"></div>
+        <label for="examFilesInput">Files (up to ${EXAM_MAX_FILES} — PDF, PPT, CSV or DOC, ${EXAM_MAX_UPLOAD < EXAM_MAX_FILE_SIZE ? 'max 4 MB per submit in total' : 'max 10 MB each'})</label>
+        <div class="file-list" id="examFileList"></div>
+        <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
+          <button type="button" class="btn btn--ghost btn--sm" id="examAddFile">${icon('plus')} Add file</button>
+          <span class="field-hint" id="examFilesHint" role="status"></span>
+        </div>
+        <input type="file" id="examFilesInput" multiple hidden accept="${EXAM_FILE_TYPES.join(',')}">
       </div>
       <div class="field full"><label>Note (optional)</label><textarea name="note">${escapeHtml(existing?.note || '')}</textarea></div>
       <div class="form-actions">
         <button type="button" class="btn btn--ghost" id="cancelExamSubmit">Cancel</button>
-        <button type="submit" class="btn btn--primary">${existing ? 'Update' : 'Submit'}</button>
+        <button type="submit" class="btn btn--primary" id="examSubmitBtn">${icon('upload')} ${existing ? 'Update' : 'Submit'}</button>
       </div>
     </form>
   `, {
     onMount: () => {
+      const form = document.getElementById('examSubmitForm');
+      const input = document.getElementById('examFilesInput');
+      const addBtn = document.getElementById('examAddFile');
+      const listEl = document.getElementById('examFileList');
+      const hint = document.getElementById('examFilesHint');
+      const errEl = document.getElementById('examSubmitError');
+      const fail = (msg) => { errEl.textContent = msg; errEl.classList.add('show'); };
+      const clearError = () => errEl.classList.remove('show');
+
+      const saved = existing?.files || [];
+      const removed = new Set(); // ids of already submitted files to delete on save
+      let added = [];            // File objects picked now
+      const count = () => saved.length - removed.size + added.length;
+      const addedSize = () => added.reduce((n, f) => n + f.size, 0);
+
+      const row = (ic, name, size, tag, action, label) => `
+        <div class="file-row">${icon(ic)}<span class="file-row__name" title="${escapeHtml(name)}">${escapeHtml(name)}</span>
+          <span class="faint">${formatFileSize(size)}</span><span class="badge ${tag[0]}">${tag[1]}</span>
+          <button type="button" class="file-row__remove" ${action} aria-label="${label} ${escapeHtml(name)}" title="${label}">${icon(label === 'Undo remove' ? 'rotate-ccw' : 'x')}</button></div>`;
+      const draw = () => {
+        listEl.innerHTML = saved.map((f) => removed.has(f.id)
+          ? row('file-check', f.name, f.size, ['badge--bad', 'Will be removed'], `data-undo="${f.id}"`, 'Undo remove')
+          : row('file-check', f.name, f.size, ['badge--good', 'Submitted'], `data-remove-saved="${f.id}"`, 'Remove')).join('')
+          + added.map((f, i) => row('upload', f.name, f.size, ['badge--info', 'New'], `data-remove-new="${i}"`, 'Remove')).join('');
+        addBtn.disabled = count() >= EXAM_MAX_FILES;
+        hint.textContent = `${count()} of ${EXAM_MAX_FILES} files${added.length ? ` · ${formatFileSize(addedSize())} to upload` : ''}`;
+      };
+
+      listEl.addEventListener('click', (e) => {
+        const b = e.target.closest('button');
+        if (!b) return;
+        clearError();
+        if (b.dataset.removeNew !== undefined) added.splice(Number(b.dataset.removeNew), 1);
+        else if (b.dataset.removeSaved) removed.add(Number(b.dataset.removeSaved));
+        else if (b.dataset.undo) {
+          if (count() >= EXAM_MAX_FILES) return fail(`Remove another file first: at most ${EXAM_MAX_FILES} files.`);
+          removed.delete(Number(b.dataset.undo));
+        }
+        draw();
+      });
+      addBtn.addEventListener('click', () => input.click());
+      input.addEventListener('change', () => {
+        clearError();
+        const problems = [];
+        for (const f of input.files) {
+          const dot = f.name.lastIndexOf('.');
+          const ext = dot < 0 ? '' : f.name.slice(dot).toLowerCase();
+          if (added.some((x) => x.name === f.name && x.size === f.size && x.lastModified === f.lastModified)) continue;
+          if (!EXAM_FILE_TYPES.includes(ext)) problems.push(`${f.name}: only PDF, PPT, CSV or DOC files are allowed.`);
+          else if (f.size > EXAM_MAX_FILE_SIZE) problems.push(`${f.name} is larger than 10 MB.`);
+          else if (!f.size) problems.push(`${f.name} is empty.`);
+          else if (count() >= EXAM_MAX_FILES) { problems.push(`At most ${EXAM_MAX_FILES} files. ${f.name} was not added.`); }
+          else added.push(f);
+        }
+        input.value = ''; // so the same file can be picked again after removing it
+        if (problems.length) fail(problems.join(' '));
+        draw();
+      });
       document.getElementById('cancelExamSubmit').addEventListener('click', closeModal);
-      document.getElementById('examSubmitForm').addEventListener('submit', async (e) => {
+
+      form.addEventListener('submit', async (e) => {
         e.preventDefault();
-        const fd = new FormData(e.target);
-        const link = fd.get('link').trim();
-        const files = [...e.target.querySelector('#examFilesInput').files];
-        const removeFileIds = [...e.target.querySelectorAll('[data-keep-file]')].filter((c) => !c.checked).map((c) => Number(c.dataset.keepFile));
-        const keptCount = (existing?.files || []).length - removeFileIds.length;
-        const errEl = document.getElementById('examSubmitError');
-        errEl.classList.remove('show');
-        const fail = (msg) => { errEl.textContent = msg; errEl.classList.add('show'); };
-        if (!link && !files.length && !keptCount) return fail('Provide a link or attach at least one file.');
-        if (keptCount + files.length > EXAM_MAX_FILES) return fail(`At most ${EXAM_MAX_FILES} files in total (${keptCount} kept + ${files.length} new).`);
-        const r = await submitExamWork(exam, { link, note: fd.get('note').trim(), files, removeFileIds });
-        if (r.error) { errEl.textContent = r.error; errEl.classList.add('show'); return; }
+        const submitBtn = document.getElementById('examSubmitBtn');
+        if (submitBtn.disabled) return;
+        clearError();
+        const link = form.link.value.trim();
+        if (!link && !count()) return fail('Provide a link or attach at least one file.');
+        if (added.length && count() > EXAM_MAX_FILES) return fail(`At most ${EXAM_MAX_FILES} files in total.`);
+        if (addedSize() > EXAM_MAX_UPLOAD) return fail(`These files total ${formatFileSize(addedSize())}. This site accepts up to ${formatFileSize(EXAM_MAX_UPLOAD)} per submit: submit some now and add the rest with Update, or share a Drive link.`);
+        const label = submitBtn.innerHTML;
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'Uploading…';
+        let r;
+        try {
+          r = await submitExamWork(exam, { link, note: form.note.value.trim(), files: added, removeFileIds: [...removed] });
+        } catch {
+          r = { error: 'Could not reach the server. Check your connection and try again.' };
+        }
+        if (r.error) {
+          submitBtn.disabled = false;
+          submitBtn.innerHTML = label;
+          return fail(r.error);
+        }
         closeModal();
         showToast(`${EXAM_LABELS[exam] || exam} submitted`, 'success');
         await renderAll();
       });
+      draw();
     }
   });
 }

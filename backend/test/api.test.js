@@ -7,7 +7,7 @@ const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
 
-const PORT = 3400 + Math.floor(Math.random() * 400);
+const PORT = 20000 + (process.pid % 10000) * 2; // unique per test process (they run in parallel)
 const BASE = `http://localhost:${PORT}/api`;
 let proc, dataDir;
 

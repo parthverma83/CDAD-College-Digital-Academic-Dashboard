@@ -29,7 +29,11 @@ async function deleteExamSubmission(id) {
   return res.ok;
 }
 
-const EXAM_MAX_FILES = 5;
+const EXAM_MAX_FILES = 3;
+const EXAM_FILE_TYPES = ['.pdf', '.ppt', '.pptx', '.csv', '.doc', '.docx'];
+const EXAM_MAX_FILE_SIZE = 10 * 1024 * 1024;
+// Vercel rejects requests over about 4.5 MB before they reach the app; other hosts take the full files.
+const EXAM_MAX_UPLOAD = location.hostname.endsWith('.vercel.app') ? 4 * 1024 * 1024 : EXAM_MAX_FILES * EXAM_MAX_FILE_SIZE;
 const EXAM_LABELS = { TA1: 'TA1', TA2: 'TA2', EndSem: 'End Sem' };
 
 /* ---------- In-browser preview (no download) ---------- */

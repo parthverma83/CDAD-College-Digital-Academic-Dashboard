@@ -14,7 +14,7 @@ const { createNotification } = require('../lib/notify');
 const router = express.Router();
 const EXAMS = ['TA1', 'TA2', 'EndSem'];
 
-const MAX_FILES = 5;
+const MAX_FILES = 3;
 
 async function filesOf(submissionId) {
   return (await db.prepare('SELECT * FROM exam_submission_files WHERE submission_id = ? ORDER BY id').all(submissionId))
@@ -96,7 +96,7 @@ async function requireLeaderOfOwnGroup(req, res, next) {
   next();
 }
 
-/** multipart: `link`, `note`, up to 5 `files`, and optional `removeFileIds` (JSON array
+/** multipart: `link`, `note`, up to 3 `files`, and optional `removeFileIds` (JSON array
     of existing file ids to drop). Existing files are kept unless removed; the total
     after the change may not exceed ${MAX_FILES}. */
 router.post('/:exam', requireRole('student'), requireLeaderOfOwnGroup, upload.array('files', MAX_FILES), persistUploads, async (req, res) => {
@@ -111,7 +111,8 @@ router.post('/:exam', requireRole('student'), requireLeaderOfOwnGroup, upload.ar
   const toRemove = oldFiles.filter((f) => removeIds.includes(f.id));
   const kept = oldFiles.length - toRemove.length;
 
-  if (kept + newFiles.length > MAX_FILES) {
+  // Older submissions may hold more than the limit: they can be kept or trimmed, just not added to.
+  if (newFiles.length && kept + newFiles.length > MAX_FILES) {
     await discardNew();
     return res.status(400).json({ error: `You can attach at most ${MAX_FILES} files (you already have ${kept}).` });
   }

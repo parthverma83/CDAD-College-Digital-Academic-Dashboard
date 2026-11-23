@@ -8,7 +8,7 @@ const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
 
-const PORT = 3800 + Math.floor(Math.random() * 400);
+const PORT = 20001 + (process.pid % 10000) * 2; // unique per test process; api.test.js uses the port before it
 const BASE = `http://localhost:${PORT}/api`;
 let proc, dataDir;
 
@@ -196,6 +196,17 @@ test('exam submissions: deadline, multi-file upload, download, delete', async ()
   form2.append('link', 'https://example.com');
   const re = await api('POST', '/exam-submissions/TA1', { jar: leader, form: form2 });
   assert.deepEqual(re.data.files.map((x) => x.name), ['slides.pdf']);
+  // at most three files in total, counting those already submitted
+  const withFiles = (n, extra = {}) => { const f = new FormData(); for (let k = 0; k < n; k++) f.append('files', new Blob(['%PDF-' + k]), `f${k}.pdf`); for (const [a, b] of Object.entries(extra)) f.append(a, b); return f; };
+  const four = await api('POST', '/exam-submissions/TA1', { jar: leader, form: withFiles(4) });
+  assert.deepEqual([four.status, four.data.error], [400, 'Too many files attached.']);
+  assert.equal((await api('POST', '/exam-submissions/TA1', { jar: leader, form: withFiles(3) })).status, 400); // 1 kept + 3 new
+  const three = await api('POST', '/exam-submissions/TA1', { jar: leader, form: withFiles(2) });
+  assert.equal(three.data.files.length, 3);
+  assert.equal((await api('POST', '/exam-submissions/TA1', { jar: leader, form: withFiles(1) })).status, 400); // full
+  const swapped = await api('POST', '/exam-submissions/TA1', { jar: leader, form: withFiles(1, { removeFileIds: JSON.stringify([three.data.files[0].id]) }) });
+  assert.equal(swapped.data.files.length, 3);
+
   const all = await api('GET', '/exam-submissions', { jar: fac });
   ok(await api('DELETE', `/exam-submissions/${all.data.submissions[0].id}`, { jar: fac }), 'delete exam submission');
   ok(await api('PUT', '/exam-submissions/deadlines/TA1', { jar: fac, json: { deadline: '' } }), 'clear deadline');

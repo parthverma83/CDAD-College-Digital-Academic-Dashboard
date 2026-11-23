@@ -159,7 +159,7 @@ The app walks a brand-new student through setup automatically:
   No Section, each with a count) and a Section column.
 
 ### Exam submissions (TA1 / TA2 / End Sem)
-- Each group's **team leader** submits per exam: a link and/or **up to 5
+- Each group's **team leader** submits per exam: a link and/or **up to 3
   files** (PDF, PPT/PPTX, CSV, DOC/DOCX, max 10MB each). Updating a
   submission keeps existing files unless they are unticked.
 - Faculty see them under **Submissions → Exam Submissions** (tabs per exam,

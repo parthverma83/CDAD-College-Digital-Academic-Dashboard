@@ -369,6 +369,16 @@ img { max-width: 100%; display: block; }
 .toast--success .icon { color: var(--green); }
 .toast--error .icon { color: #fca5a5; }
 .role-switch button { display: inline-flex; align-items: center; gap: 6px; }
+/* Attached files */
+.file-list { display: flex; flex-direction: column; gap: 6px; }
+.file-row {
+  display: flex; align-items: center; gap: 8px; padding: 8px 10px; font-size: 12.5px;
+  border: 1px solid var(--line); border-radius: var(--radius-sm); background: var(--canvas);
+}
+.file-row__name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 600; }
+.file-row > .faint, .file-row > .badge { flex-shrink: 0; }
+.file-row__remove { border: none; background: none; cursor: pointer; padding: 4px; color: var(--ink-soft); display: flex; border-radius: 6px; }
+.file-row__remove:hover { background: var(--red-dim); color: var(--red); }
 /* Icon inside a text field */
 .input-icon, .search-box { position: relative; display: block; }
 .search-box { flex: 1; min-width: 200px; }

@@ -58,6 +58,8 @@ app.use((err, req, res, next) => {
   if (!err) return next();
   // Postgres "invalid input syntax" (e.g. /api/students/abc): the id can't exist.
   if (err.code === '22P02') return res.status(404).json({ error: 'Not found' });
+  if (err.code === 'LIMIT_UNEXPECTED_FILE') return res.status(400).json({ error: 'Too many files attached.' });
+  if (err.code === 'LIMIT_FILE_SIZE') return res.status(400).json({ error: 'Each file can be at most 10 MB.' });
   console.error(err);
   if (res.headersSent) return;
   if (err.status === 503) return res.status(503).json({ error: err.message });

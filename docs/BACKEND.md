@@ -173,7 +173,7 @@ database upgrades in place — no reset needed.
 - `marks.released` — 0/1; when the column is first added, existing rows are set
   to released so nobody loses access.
 - `exam_submissions` (one row per group per exam, unique on `group_id, exam`),
-  `exam_submission_files` (up to 5 per submission; legacy single-file rows are
+  `exam_submission_files` (up to 3 per submission; legacy single-file rows are
   migrated automatically), `exam_deadlines` (one optional deadline per exam).
 - `admins`.
 
