@@ -94,7 +94,7 @@ async function buildGroupMarksCard() {
   return `
     <div class="section" style="grid-column:1 / -1;">
       <div class="section__head">
-        <div><span class="faint mono" style="font-size:11px;">${escapeHtml(group.displayId)}</span><h3>Group Marks — ${escapeHtml(group.name)}</h3></div>
+        <h3><span>Group Marks — ${escapeHtml(group.name)}</span> <span class="id-tag mono">${escapeHtml(group.displayId)}</span></h3>
         ${avg !== null ? `<span class="badge badge--info">Group avg ${avg}%</span>` : ''}
       </div>
       <div class="marks-ledger">

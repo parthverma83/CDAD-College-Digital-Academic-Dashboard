@@ -10,24 +10,21 @@ async function renderSubmissionTab() {
     return;
   }
 
+  // Load everything first, then draw in one go: two refreshes that overlap must not each add their own exam cards.
+  const amLeader = group.teamLeader === ME.displayId;
+  const examData = await fetchExamSubmissions();
   host.innerHTML = `
-    <div class="section__head">
-      <div><span class="faint mono" style="font-size:11px;">${escapeHtml(project.displayId)}</span><h3>${escapeHtml(project.title)}</h3></div>
-    </div>
-    <p class="field-hint" style="margin-bottom:18px;">Submit your finished work here for faculty to review. You can update your submission any time until it's approved.</p>
-    <div id="submissionTabBlock" style="padding-top:6px;"></div>`;
-
-  renderSubmissionBlock(project, 'submissionTabBlock', group.teamLeader === ME.displayId);
-  await renderExamSubmissionCards(host, group.teamLeader === ME.displayId);
+    <div id="submissionTabBlock"></div>
+    <p class="field-hint" style="margin-top:10px;">You can update your submission any time until it's approved.</p>
+    <div id="examSubmissionCards" style="margin-top:28px;"></div>`;
+  renderSubmissionBlock(project, 'submissionTabBlock', amLeader);
+  renderExamSubmissionCards(document.getElementById('examSubmissionCards'), amLeader, examData);
 }
 
 /* TA1 / TA2 / EndSem: one card per exam, team leader submits a link and/or file. */
-async function renderExamSubmissionCards(host, amLeader) {
-  const { exams, submissions, deadlines = {} } = await fetchExamSubmissions();
-  const wrap = document.createElement('div');
-  wrap.style.marginTop = '28px';
-  wrap.innerHTML = `
-    <h4 style="font-size:13.5px; margin-bottom:10px;">Exam Submissions</h4>
+function renderExamSubmissionCards(host, amLeader, { exams, submissions, deadlines = {} }) {
+  host.innerHTML = `
+    <div class="section__head" style="margin-bottom:6px;"><h3>Exam Submissions</h3></div>
     <p class="field-hint" style="margin-bottom:14px;">Submit your PPT, document or link for each exam${amLeader ? '' : ' — only your team leader can submit'}. <strong>Submitting your final project above does not submit these.</strong></p>
     <div class="card-grid">
       ${exams.map((exam) => {
@@ -49,8 +46,7 @@ async function renderExamSubmissionCards(host, amLeader) {
           </div>`;
       }).join('')}
     </div>`;
-  host.appendChild(wrap);
-  wrap.querySelectorAll('[data-exam-submit]').forEach((b) => b.addEventListener('click', () => {
+  host.querySelectorAll('[data-exam-submit]').forEach((b) => b.addEventListener('click', () => {
     openExamSubmitModal(b.dataset.examSubmit, submissions.find((x) => x.exam === b.dataset.examSubmit));
   }));
 }
@@ -109,10 +105,12 @@ function renderSubmissionBlock(project, hostId, amLeader) {
   const host = document.getElementById(hostId || 'submissionBlock');
   if (!host) return;
   const sub = project.submission;
+  // The Progress page reuses this block and already names the project in its heading.
+  const projectTag = hostId !== 'submissionTabBlock' ? '' : `<span class="faint" style="font-size:13px;">${escapeHtml(project.title)} <span class="id-tag mono">${escapeHtml(project.displayId)}</span></span>`;
 
   if (!sub) {
     host.innerHTML = `
-      <h4 style="font-size:13.5px; margin-bottom:10px;">Final Submission</h4>
+      <div class="section__head"><h3>Final Submission</h3>${projectTag}</div>
       <p class="muted" style="font-size:12.5px; margin-bottom:12px;">Once your project is ready, submit a link (repository, drive folder, etc.) and/or attach a file (PDF, PPT, CSV, or DOC) for faculty to review.</p>
       ${amLeader
         ? `<button class="btn btn--primary btn--sm" data-submit-project-btn>${icon('upload')} Submit Project</button>`
@@ -124,7 +122,7 @@ function renderSubmissionBlock(project, hostId, amLeader) {
 
   const badgeClass = sub.status === 'Approved' ? 'badge--good' : sub.status === 'Rejected' ? 'badge--bad' : 'badge--warn';
   host.innerHTML = `
-    <div class="section__head"><h4 style="font-size:13.5px; margin:0;">Final Submission</h4><span class="badge ${badgeClass}">${escapeHtml(sub.status)}</span></div>
+    <div class="section__head"><h3>Final Submission <span class="badge ${badgeClass}">${escapeHtml(sub.status)}</span></h3>${projectTag}</div>
     <div class="list-item">
       ${sub.link ? `<div class="list-item__body"><strong>Link:</strong> <a href="${escapeHtml(sub.link)}" target="_blank" rel="noopener">${escapeHtml(sub.link)}</a></div>` : ''}
       ${sub.fileName ? `<div class="list-item__body"><strong>File:</strong> <a href="/api/projects/${project.id}/submission/file" target="_blank">${escapeHtml(sub.fileName)}</a> <span class="faint">(${formatFileSize(sub.fileSize)})</span></div>` : ''}

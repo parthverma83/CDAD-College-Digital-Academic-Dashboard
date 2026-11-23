@@ -16,7 +16,7 @@ async function renderGroupPanel() {
   const members = (group.members || []).map((m) => students.find((s) => s.displayId === m)).filter(Boolean);
   host.innerHTML = `
     <div class="section__head">
-      <div><span class="faint mono" style="font-size:11px;">${escapeHtml(group.displayId)}</span><h3>${escapeHtml(group.name)}</h3></div>
+      <h3><span>${escapeHtml(group.name)}</span> <span class="id-tag mono">${escapeHtml(group.displayId)}</span></h3>
       <span class="badge ${statusBadgeClass(group.status)}">${escapeHtml(group.status)}</span>
     </div>
     <div class="form-grid" style="margin-bottom:20px;">

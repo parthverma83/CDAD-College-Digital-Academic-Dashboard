@@ -23,7 +23,7 @@ async function renderProjectPanel() {
 
   host.innerHTML = `
     <div class="section__head">
-      <div><span class="faint mono" style="font-size:11px;">${escapeHtml(project.displayId)}</span><h3>${escapeHtml(project.title)}</h3></div>
+      <h3><span>${escapeHtml(project.title)}</span> <span class="id-tag mono">${escapeHtml(project.displayId)}</span></h3>
       <div style="display:flex; gap:8px; align-items:center;">
         <span class="badge ${statusBadgeClass(project.status)}">${escapeHtml(project.status)}</span>
         <button class="btn btn--ghost btn--sm" id="editMyProjectBtn">${icon('pencil')} Edit</button>
