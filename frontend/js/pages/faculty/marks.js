@@ -67,6 +67,60 @@ async function renderMarksTable() {
   }));
 }
 
+/* Download the marks currently listed (section filter + search) as CSV, with each student's name. */
+function csvCell(v) {
+  if (v === null || v === undefined) return '';
+  if (typeof v === 'number') return String(v);
+  // Text starting with = + - @ would run as a formula in Excel: a leading ' keeps it as text.
+  const s = /^[=+\-@\t\r]/.test(v) ? `'${v}` : String(v);
+  return /[",\r\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+}
+
+async function exportMarksCsv() {
+  const btn = document.getElementById('exportMarksBtn');
+  btn.disabled = true;
+  try {
+    const [students, marks] = await Promise.all([getData(CDAD_KEYS.STUDENTS), allMarks()]);
+    const section = document.getElementById('marksSectionFilter').value || '__all';
+    const query = document.getElementById('marksSearch').value.trim().toLowerCase();
+    const listed = students
+      .filter((s) => (section === '__all' || (s.section || '') === section) && (!query || s.displayId.toLowerCase().includes(query)))
+      .sort((a, b) => (a.section || '￿').localeCompare(b.section || '￿') || a.displayId.localeCompare(b.displayId));
+    if (!listed.length) { showToast('There are no students to download.', 'info'); return; }
+
+    const byStudent = new Map(marks.map((m) => [m.studentId, m]));
+    const header = ['Enrollment No.', 'Name', 'Section', 'Group',
+      ...CA_HEADS.flatMap((h) => [`${h.short} (out of ${CA_OUT_OF})`, `${h.short} (scaled to ${h.scaledTo})`]),
+      `CA Total (out of ${CA_TOTAL})`, `Finals (out of ${FINALS_OUT_OF})`, 'Overall', 'Overall Out Of', 'Percentage', 'Grade', 'Released to Student'];
+    const rows = listed.map((s) => {
+      const m = byStudent.get(s.displayId);
+      const who = [s.displayId, s.name, s.section || '', s.group || ''];
+      if (!m) return [...who, ...Array(header.length - who.length).fill('')]; // no marks entered
+      const t = deriveMarkTotals(m);
+      return [...who, ...CA_HEADS.flatMap((h) => [m[h.key], scaledMark(m[h.key], h)]),
+        t.ca, t.finals, t.total, t.max, t.percentage, t.grade, m.released ? 'Yes' : 'No'];
+    });
+
+    const csv = [header, ...rows].map((r) => r.map(csvCell).join(',')).join('\r\n') + '\r\n';
+    const part = section === '__all' ? 'all-sections' : section || 'no-section';
+    const d = new Date();
+    const day = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+    // The BOM makes Excel read names in any language correctly.
+    const url = URL.createObjectURL(new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8' }));
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `marks-${part.replace(/[^A-Za-z0-9]+/g, '-').replace(/^-|-$/g, '').toLowerCase() || 'section'}-${day}.csv`;
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+    const withMarks = rows.filter((r) => r[r.length - 1] !== '').length;
+    showToast(`Downloaded ${rows.length} student${rows.length === 1 ? '' : 's'} (${withMarks} with marks)`, 'success');
+  } catch {
+    showToast('Could not download the marks', 'error');
+  } finally {
+    btn.disabled = false;
+  }
+}
+
 function confirmReleaseAllMarks() {
   openModal('Release All Marks', `
     <p class="confirm-text">Release marks for all students? Every student with a marks record will be able to see their own marks and their group's marks.</p>
