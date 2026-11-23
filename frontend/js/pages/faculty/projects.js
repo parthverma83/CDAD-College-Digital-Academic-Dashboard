@@ -16,11 +16,11 @@ async function renderProjects() {
       </div>
       ${p.submission ? `<div class="card__meta">Submission: <span class="badge ${p.submission.status === 'Approved' ? 'badge--good' : p.submission.status === 'Rejected' ? 'badge--bad' : 'badge--warn'}">${escapeHtml(p.submission.status)}</span></div>` : ''}
       <div class="card__actions">
-        <button class="btn btn--ghost btn--sm" data-edit-project="${p.id}">Edit ✎</button>
-        <button class="btn btn--ghost btn--sm" data-stage-project="${p.id}">Stages</button>
-        ${p.submission && p.submission.status === 'Pending Review' ? `<button class="btn btn--primary btn--sm" data-review-submission="${p.id}">Review Submission</button>` : ''}
-        ${(!p.submission || p.submission.status === 'Rejected') && p.group ? `<button class="btn btn--ghost btn--sm" data-request-submission="${p.id}">Request Submission</button>` : ''}
-        <button class="btn btn--danger btn--sm" data-del-project="${p.id}">Delete</button>
+        <button class="btn btn--ghost btn--sm" data-edit-project="${p.id}">${icon('pencil')} Edit</button>
+        <button class="btn btn--ghost btn--sm" data-stage-project="${p.id}">${icon('list-checks')} Stages</button>
+        ${p.submission && p.submission.status === 'Pending Review' ? `<button class="btn btn--primary btn--sm" data-review-submission="${p.id}">${icon('file-search')} Review Submission</button>` : ''}
+        ${(!p.submission || p.submission.status === 'Rejected') && p.group ? `<button class="btn btn--ghost btn--sm" data-request-submission="${p.id}">${icon('send')} Request Submission</button>` : ''}
+        <button class="btn btn--danger btn--sm" data-del-project="${p.id}">${icon('trash-2')} Delete</button>
       </div>
     </div>`).join('') : emptyState('No projects yet.');
 
@@ -42,7 +42,7 @@ async function openRequestSubmissionModal(projectId) {
       <div class="field full"><label>Message (optional — a default reminder is used if left blank)</label><textarea name="message" placeholder="e.g. Please submit before Friday's review..."></textarea></div>
       <div class="form-actions">
         <button type="button" class="btn btn--ghost" id="cancelRequestSubmission">Cancel</button>
-        <button type="submit" class="btn btn--primary">Send Request</button>
+        <button type="submit" class="btn btn--primary">${icon('send')} Send Request</button>
       </div>
     </form>
   `, {
@@ -74,8 +74,8 @@ async function openReviewSubmissionModal(projectId) {
     <form id="reviewSubmissionForm">
       <div class="field full"><label>Feedback (optional, sent to the student)</label><textarea name="facultyNote" placeholder="Add feedback or reasons for your decision..."></textarea></div>
       <div class="form-actions">
-        <button type="button" class="btn btn--danger" id="rejectSubmissionBtn">Reject</button>
-        <button type="submit" class="btn btn--primary">Approve</button>
+        <button type="button" class="btn btn--danger" id="rejectSubmissionBtn">${icon('x')} Reject</button>
+        <button type="submit" class="btn btn--primary">${icon('check')} Approve</button>
       </div>
     </form>
   `, {

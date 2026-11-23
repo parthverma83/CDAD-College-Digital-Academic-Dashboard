@@ -8,21 +8,22 @@
 <link rel="stylesheet" href="css/dashboard.css">
 <link rel="stylesheet" href="css/forms.css">
 <link rel="stylesheet" href="css/responsive.css">
+<link rel="icon" type="image/svg+xml" href="favicon.svg">
 </head>
 <body>
 <div class="app-shell">
   <aside class="sidebar">
     <div class="sidebar__brand">
-      <div class="sidebar__mark">🎓</div>
+      <div class="sidebar__mark"><i data-icon="graduation-cap"></i></div>
       <div class="sidebar__brand-text"><strong>CDAD</strong><span>Admin Panel</span></div>
     </div>
-    <button class="nav-link active" data-view="overview"><span class="nav-link__icon">▣</span> Overview</button>
-    <button class="nav-link" data-view="students"><span class="nav-link__icon">●</span> Students</button>
-    <button class="nav-link" data-view="faculty"><span class="nav-link__icon">◎</span> Faculty</button>
-    <a class="nav-link" href="faculty.html" style="text-decoration:none;"><span class="nav-link__icon">➜</span> Faculty Dashboard</a>
+    <button class="nav-link active" data-view="overview"><span class="nav-link__icon"><i data-icon="layout-dashboard"></i></span> Overview</button>
+    <button class="nav-link" data-view="students"><span class="nav-link__icon"><i data-icon="user-round"></i></span> Students</button>
+    <button class="nav-link" data-view="faculty"><span class="nav-link__icon"><i data-icon="briefcase-business"></i></span> Faculty</button>
+    <a class="nav-link" href="faculty.html" style="text-decoration:none;"><span class="nav-link__icon"><i data-icon="arrow-right"></i></span> Faculty Dashboard</a>
     <div class="sidebar__footer">
-      <button class="nav-link" id="changePasswordBtn"><span class="nav-link__icon">🔑</span> Change Password</button>
-      <button class="logout-btn" id="logoutBtn"><span class="nav-link__icon">⏻</span> Logout</button>
+      <button class="nav-link" id="changePasswordBtn"><span class="nav-link__icon"><i data-icon="key-round"></i></span> Change Password</button>
+      <button class="logout-btn" id="logoutBtn"><span class="nav-link__icon"><i data-icon="log-out"></i></span> Logout</button>
     </div>
   </aside>
 
@@ -44,12 +45,12 @@
       <div class="topbar">
         <div><h1>Students</h1><div class="topbar__sub">Add and manage student accounts</div></div>
         <div class="topbar__actions">
-          <button class="btn btn--ghost" id="importStudentsBtn">Import CSV</button>
-          <button class="btn btn--primary" id="addStudentBtn">+ Add Student</button>
+          <button class="btn btn--ghost" id="importStudentsBtn"><i data-icon="upload"></i> Import CSV</button>
+          <button class="btn btn--primary" id="addStudentBtn"><i data-icon="plus"></i> Add Student</button>
         </div>
       </div>
       <div class="section">
-        <div class="filter-bar"><input type="search" id="studentSearch" placeholder="Search by ID, name or section..."><span class="faint" id="studentCount" style="font-size:12.5px;"></span></div>
+        <div class="filter-bar"><span class="search-box"><i data-icon="search"></i><input type="search" id="studentSearch" placeholder="Search by ID, name or section..."></span><span class="faint" id="studentCount" style="font-size:12.5px;"></span></div>
         <div class="table-wrap">
           <table class="data-table">
             <thead><tr><th>Student ID</th><th>Name</th><th>Email</th><th>Section</th><th>Group</th><th>Status</th><th>Actions</th></tr></thead>
@@ -63,7 +64,7 @@
     <section class="view" id="view-faculty">
       <div class="topbar">
         <div><h1>Faculty</h1><div class="topbar__sub">Add and manage faculty accounts</div></div>
-        <div class="topbar__actions"><button class="btn btn--primary" id="addFacultyBtn">+ Add Faculty</button></div>
+        <div class="topbar__actions"><button class="btn btn--primary" id="addFacultyBtn"><i data-icon="plus"></i> Add Faculty</button></div>
       </div>
       <div class="section">
         <div class="table-wrap">
@@ -77,6 +78,7 @@
   </main>
 </div>
 
+<script src="js/core/icons.js"></script>
 <script src="js/core/storage.js"></script>
 <script src="js/core/common.js"></script>
 <script src="js/core/auth.js"></script>

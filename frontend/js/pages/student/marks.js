@@ -71,7 +71,7 @@ async function renderMarksPage() {
       <div class="section__head"><h3>Evaluation Details</h3></div>
       <p class="muted" style="font-size:12.5px;">Note: Marks will be updated by respective faculty members.</p>
       <p class="faint" style="font-size:12px;">Check back regularly for the latest updates.</p>
-      <div style="margin-top:18px; text-align:center; opacity:0.5; font-size:38px;">📋</div>
+      <div style="margin-top:18px; text-align:center; opacity:0.5; font-size:38px;">${icon('clipboard-list')}</div>
     </div>`;
 
   host.innerHTML = summaryCard + donutCard + trendCard + detailsCard + groupCard;

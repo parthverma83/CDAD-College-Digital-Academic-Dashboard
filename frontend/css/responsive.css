@@ -8,7 +8,7 @@
 }
 
 @media (max-width: 980px) {
-  .app-shell { grid-template-columns: 1fr; }
+  .app-shell { grid-template-columns: minmax(0, 1fr); } /* wide tables scroll inside their card, not the page */
   .dash-grid, .dash-grid--2 { grid-template-columns: 1fr; }
   .dash-grid > :first-child { grid-column: auto; }
   .sidebar {

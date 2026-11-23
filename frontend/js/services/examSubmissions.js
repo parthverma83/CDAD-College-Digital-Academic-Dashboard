@@ -74,7 +74,7 @@ async function openExamFilePreview(f) {
       <p class="muted">Loading preview…</p>
     </div>
     <div class="form-actions">
-      <a class="btn btn--ghost" href="/api/exam-submissions/files/${f.id}" target="_blank">Download</a>
+      <a class="btn btn--ghost" href="/api/exam-submissions/files/${f.id}" target="_blank">${icon('download')} Download</a>
       <button type="button" class="btn btn--primary" id="closeExamPreview">Close</button>
     </div>`, {
     onMount: async () => {

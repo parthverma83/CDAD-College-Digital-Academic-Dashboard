@@ -41,7 +41,7 @@ function openEditFacultyProfileModal() {
       </div>
       <div class="form-actions">
         <button type="button" class="btn btn--ghost" id="cancelFacProfile">Cancel</button>
-        <button type="submit" class="btn btn--primary">Save Changes</button>
+        <button type="submit" class="btn btn--primary">${icon('save')} Save Changes</button>
       </div>
     </form>
   `, {

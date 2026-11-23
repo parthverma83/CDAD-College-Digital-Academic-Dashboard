@@ -97,8 +97,8 @@ async function renderExamSubmissions() {
   const dlStatus = document.getElementById('examDeadlineStatus');
   const dl = deadlines[currentExam];
   if (document.activeElement !== dlInput) dlInput.value = isoToLocalInput(dl);
-  dlStatus.textContent = dl
-    ? (new Date(dl) < new Date() ? '🔒 Closed — students can no longer submit' : `Open until ${formatDateTime(dl)}`)
+  dlStatus.innerHTML = dl
+    ? (new Date(dl) < new Date() ? `${icon('lock')} Closed — students can no longer submit` : `${icon('clock')} Open until ${escapeHtml(formatDateTime(dl))}`)
     : 'No deadline — students can always submit';
   if (!dlInput.dataset.wired) {
     dlInput.dataset.wired = '1';
@@ -132,11 +132,11 @@ async function renderExamSubmissions() {
       <td>${escapeHtml(s.submittedByName || s.submittedBy)}<div class="faint mono" style="font-size:11px;">${escapeHtml(s.submittedBy)}</div></td>
       <td>${formatDateTime(s.submittedAt)}</td>
       <td class="table-actions">
-        ${s.link ? `<a class="btn btn--ghost btn--sm" href="${escapeHtml(s.link)}" target="_blank" rel="noopener">Open Link ↗</a>` : ''}
-        ${s.files.map((f) => `<span class="exam-file" style="display:inline-flex; gap:2px;">${canPreviewExamFile(f) ? `<button class="btn btn--primary btn--sm" data-view-exam-file="${escapeHtml(JSON.stringify(f))}" title="View ${escapeHtml(f.name)} without downloading">👁 ${escapeHtml(f.name.length > 18 ? f.name.slice(0, 16) + '…' : f.name)}</button>` : ''}<a class="btn btn--ghost btn--sm" href="/api/exam-submissions/files/${f.id}" target="_blank" title="Download ${escapeHtml(f.name)}">${canPreviewExamFile(f) ? '↓' : escapeHtml(f.name.length > 22 ? f.name.slice(0, 20) + '…' : f.name) + ' ↓'}</a></span>`).join('')}
+        ${s.link ? `<a class="btn btn--ghost btn--sm" href="${escapeHtml(s.link)}" target="_blank" rel="noopener">${icon('external-link')} Open Link</a>` : ''}
+        ${s.files.map((f) => `<span class="exam-file" style="display:inline-flex; gap:2px;">${canPreviewExamFile(f) ? `<button class="btn btn--primary btn--sm" data-view-exam-file="${escapeHtml(JSON.stringify(f))}" title="View ${escapeHtml(f.name)} without downloading">${icon('eye')} ${escapeHtml(f.name.length > 18 ? f.name.slice(0, 16) + '…' : f.name)}</button>` : ''}<a class="btn btn--ghost btn--sm" href="/api/exam-submissions/files/${f.id}" target="_blank" title="Download ${escapeHtml(f.name)}">${icon('download')}${canPreviewExamFile(f) ? '' : ' ' + escapeHtml(f.name.length > 22 ? f.name.slice(0, 20) + '…' : f.name)}</a></span>`).join('')}
       </td>
       <td>${escapeHtml(s.note || '—')}</td>
-      <td class="table-actions"><button class="btn btn--danger btn--sm" data-del-exam-sub="${s.id}">Remove</button></td>
+      <td class="table-actions"><button class="btn btn--danger btn--sm" data-del-exam-sub="${s.id}">${icon('trash-2')} Remove</button></td>
     </tr>`;
   }).join('') : `<tr class="empty-row"><td colspan="7">No groups yet.</td></tr>`;
 
@@ -163,8 +163,8 @@ function submissionHubRow(p) {
       <td>${formatDateTime(sub.submittedAt)}</td>
       <td><span class="badge ${badgeClass}">${escapeHtml(sub.status)}</span></td>
       <td class="table-actions">
-        ${sub.link ? `<a class="btn btn--ghost btn--sm" href="${escapeHtml(sub.link)}" target="_blank" rel="noopener">View Link ↗</a>` : ''}
-        ${sub.fileName ? `<a class="btn btn--ghost btn--sm" href="/api/projects/${p.id}/submission/file" target="_blank">Download File ↗</a>` : ''}
+        ${sub.link ? `<a class="btn btn--ghost btn--sm" href="${escapeHtml(sub.link)}" target="_blank" rel="noopener">${icon('external-link')} View Link</a>` : ''}
+        ${sub.fileName ? `<a class="btn btn--ghost btn--sm" href="/api/projects/${p.id}/submission/file" target="_blank">${icon('download')} Download File</a>` : ''}
         <button class="btn btn--primary btn--sm" data-review-hub="${p.id}">${sub.status === 'Pending Review' ? 'Review' : 'View / Re-review'}</button>
       </td>
     </tr>`;
@@ -199,7 +199,7 @@ function projectFormModal(title, project) {
         </div>
         <div class="form-actions">
           <button type="button" class="btn btn--ghost" id="cancelProjectForm">Cancel</button>
-          <button type="submit" class="btn btn--primary">Save Changes</button>
+          <button type="submit" class="btn btn--primary">${icon('save')} Save Changes</button>
         </div>
       </form>
     `, {

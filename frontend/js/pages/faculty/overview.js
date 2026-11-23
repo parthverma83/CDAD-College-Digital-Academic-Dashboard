@@ -42,13 +42,13 @@ async function renderOverview() {
 
   // ---- Stat cards ----
   host.innerHTML = `
-    <div class="stat-card stat-card--blue"><div class="stat-card__icon">👥</div><div class="stat-card__label">Total Students</div>
+    <div class="stat-card stat-card--blue"><div class="stat-card__icon">${icon('user-round')}</div><div class="stat-card__label">Total Students</div>
       <div class="stat-card__value">${students.length}</div><div class="stat-card__sub stat-card__sub--good">${students.filter((s) => s.status === 'Active').length} active</div></div>
-    <div class="stat-card stat-card--purple"><div class="stat-card__icon">▦</div><div class="stat-card__label">Total Groups</div>
+    <div class="stat-card stat-card--purple"><div class="stat-card__icon">${icon('users-round')}</div><div class="stat-card__label">Total Groups</div>
       <div class="stat-card__value">${groups.length}</div><div class="stat-card__sub stat-card__sub--muted">across ${divisions.length || 0} division${divisions.length === 1 ? '' : 's'}</div></div>
-    <div class="stat-card stat-card--green"><div class="stat-card__icon">📤</div><div class="stat-card__label">Exam Submissions</div>
+    <div class="stat-card stat-card--green"><div class="stat-card__icon">${icon('file-check')}</div><div class="stat-card__label">Exam Submissions</div>
       <div class="stat-card__value">${examSubs.length}</div><div class="stat-card__sub stat-card__sub--muted">TA1 ${examCount('TA1')} · TA2 ${examCount('TA2')} · End Sem ${examCount('EndSem')}</div></div>
-    <div class="stat-card stat-card--orange"><div class="stat-card__icon">📨</div><div class="stat-card__label">Pending Requests</div>
+    <div class="stat-card stat-card--orange"><div class="stat-card__icon">${icon('inbox')}</div><div class="stat-card__label">Pending Requests</div>
       <div class="stat-card__value">${pendingRequests}</div><div class="stat-card__sub ${pendingRequests ? 'stat-card__sub--warn' : 'stat-card__sub--muted'}">${pendingRequests ? 'waiting for a response' : 'all caught up'}</div></div>`;
 
   // ---- Division overview ----
@@ -86,7 +86,7 @@ async function renderOverview() {
     OVERVIEW_EXAMS.forEach((e) => {
       const d = deadlines[e];
       if (d && new Date(d).getTime() > now) {
-        items.push({ at: new Date(d).getTime(), icon: '⏰', title: `${EXAM_LABELS[e]} submissions close ${overviewTimeUntil(d)}`,
+        items.push({ at: new Date(d).getTime(), icon: 'alarm-clock', title: `${EXAM_LABELS[e]} submissions close ${overviewTimeUntil(d)}`,
           sub: `${formatDateTime(d)} · ${examCount(e)} of ${groups.length} groups submitted` });
       }
     });
@@ -94,12 +94,12 @@ async function renderOverview() {
       .filter((p) => p.status !== 'Cancelled' && p.status !== 'Completed' && p.date && new Date(p.date).getTime() >= now - 86400000)
       .forEach((p) => {
         const g = groups.find((x) => x.displayId === p.group);
-        items.push({ at: new Date(p.date).getTime(), icon: '🎤', title: `Presentation — ${p.group}${g ? ' · ' + g.name : ''}`,
+        items.push({ at: new Date(p.date).getTime(), icon: 'presentation', title: `Presentation — ${p.group}${g ? ' · ' + g.name : ''}`,
           sub: `${formatDate(p.date)}${p.time ? ', ' + p.time : ''}${p.venue ? ' · ' + p.venue : ''}` });
       });
     items.sort((a, b) => a.at - b.at);
     upHost.innerHTML = items.length ? items.slice(0, 6).map((i) => `
-      <div class="notif-mini"><div class="notif-mini__icon">${i.icon}</div>
+      <div class="notif-mini"><div class="notif-mini__icon">${icon(i.icon)}</div>
         <div><div class="notif-mini__title">${escapeHtml(i.title)}</div><div class="notif-mini__time">${escapeHtml(i.sub)}</div></div></div>`).join('')
       + (items.length > 6 ? `<div class="notif-mini-foot">+ ${items.length - 6} more</div>` : '')
       : emptyState('Nothing scheduled — set exam deadlines or schedule presentations.');
@@ -109,7 +109,7 @@ async function renderOverview() {
   const actHost = document.getElementById('overviewActivity');
   if (actHost) {
     actHost.innerHTML = activity.length ? activity.slice(0, 6).map((a) => `
-      <div class="notif-mini"><div class="notif-mini__icon">•</div>
+      <div class="notif-mini"><div class="notif-mini__icon">${icon('history')}</div>
         <div><div class="notif-mini__title" style="font-weight:600;">${escapeHtml(a.text)}</div><div class="notif-mini__time">${overviewTimeAgo(a.date)}</div></div></div>`).join('')
       : emptyState('No activity yet.');
   }

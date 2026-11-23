@@ -70,8 +70,8 @@ async function renderStudents() {
       <td>${totals ? totals.total + ' / ' + totals.max : '—'}</td>
       <td><span class="badge ${statusBadgeClass(s.status)}">${escapeHtml(s.status)}</span></td>
       <td class="table-actions">
-        <button class="btn btn--ghost btn--sm" data-edit-student="${s.id}">Edit ✎</button>
-        <button class="btn btn--danger btn--sm" data-del-student="${s.id}">Delete</button>
+        <button class="btn btn--ghost btn--sm" data-edit-student="${s.id}">${icon('pencil')} Edit</button>
+        <button class="btn btn--danger btn--sm" data-del-student="${s.id}">${icon('trash-2')} Delete</button>
       </td>
     </tr>`;
   }).join('') : `<tr class="empty-row"><td colspan="9">No students match your filters.</td></tr>`;
@@ -118,7 +118,7 @@ async function openAssignSectionModal() {
     </div>
     <div class="form-actions">
       <button type="button" class="btn btn--ghost" id="cancelAssignSection">Cancel</button>
-      <button type="button" class="btn btn--primary" id="confirmAssignSection">Assign</button>
+      <button type="button" class="btn btn--primary" id="confirmAssignSection">${icon('school')} Assign</button>
     </div>`, {
     onMount: () => {
       document.getElementById('cancelAssignSection').addEventListener('click', closeModal);
@@ -276,7 +276,7 @@ function openImportStudentsModal(opts) {
     <div id="importPreview" style="margin-bottom:14px;"></div>
     <div class="form-actions">
       <button type="button" class="btn btn--ghost" id="cancelImport">Cancel</button>
-      <button type="button" class="btn btn--primary" id="confirmImportBtn" disabled>Import Students</button>
+      <button type="button" class="btn btn--primary" id="confirmImportBtn" disabled>${icon('upload')} Import Students</button>
     </div>
   `, {
     onMount: () => {
@@ -475,7 +475,7 @@ function studentFormModal(title, student) {
         </div>
         <div class="form-actions">
           <button type="button" class="btn btn--ghost" id="cancelStudentForm">Cancel</button>
-          <button type="submit" class="btn btn--primary">Save Changes</button>
+          <button type="submit" class="btn btn--primary">${icon('save')} Save Changes</button>
         </div>
       </form>
     `, {

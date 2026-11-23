@@ -18,8 +18,8 @@ function notifRow(n) {
       </div>
       <div class="list-item__body">${escapeHtml(n.message)}</div>
       <div class="list-item__foot">
-        ${!n.read ? `<button class="btn btn--ghost btn--sm" data-mark-read="${n.id}">Mark read</button>` : '<span></span>'}
-        <button class="btn btn--ghost btn--sm" data-del-notif="${n.id}">Delete</button>
+        ${!n.read ? `<button class="btn btn--ghost btn--sm" data-mark-read="${n.id}">${icon('mail-open')} Mark read</button>` : '<span></span>'}
+        <button class="btn btn--ghost btn--sm" data-del-notif="${n.id}">${icon('trash-2')} Delete</button>
       </div>
     </div>`;
 }

@@ -65,8 +65,8 @@ function renderStudents() {
       <td>${escapeHtml(s.group || '—')}</td>
       <td><span class="badge ${statusBadgeClass(s.status)}">${escapeHtml(s.status)}</span></td>
       <td class="table-actions">
-        <button class="btn btn--ghost btn--sm" data-edit-student="${s.id}">Edit ✎</button>
-        <button class="btn btn--danger btn--sm" data-del-student="${s.id}">Delete</button>
+        <button class="btn btn--ghost btn--sm" data-edit-student="${s.id}">${icon('pencil')} Edit</button>
+        <button class="btn btn--danger btn--sm" data-del-student="${s.id}">${icon('trash-2')} Delete</button>
       </td>
     </tr>`).join('') : '<tr class="empty-row"><td colspan="7">No students found.</td></tr>';
   host.querySelectorAll('[data-edit-student]').forEach((b) => b.addEventListener('click', () => studentModal(adminStudents.find((s) => String(s.id) === b.dataset.editStudent))));
@@ -114,8 +114,8 @@ function renderFaculty() {
       <td>${escapeHtml(f.department || '—')}</td>
       <td>${escapeHtml(f.designation || '—')}</td>
       <td class="table-actions">
-        <button class="btn btn--ghost btn--sm" data-edit-faculty="${f.id}">Edit ✎</button>
-        <button class="btn btn--danger btn--sm" data-del-faculty="${f.id}">Delete</button>
+        <button class="btn btn--ghost btn--sm" data-edit-faculty="${f.id}">${icon('pencil')} Edit</button>
+        <button class="btn btn--danger btn--sm" data-del-faculty="${f.id}">${icon('trash-2')} Delete</button>
       </td>
     </tr>`).join('') : '<tr class="empty-row"><td colspan="6">No faculty yet.</td></tr>';
   host.querySelectorAll('[data-edit-faculty]').forEach((b) => b.addEventListener('click', () => facultyModal(adminFaculty.find((f) => String(f.id) === b.dataset.editFaculty))));
@@ -190,7 +190,7 @@ function importModal() {
     <div id="adminCsvPreview" style="margin-bottom:14px;"></div>
     <div class="form-actions">
       <button type="button" class="btn btn--ghost" id="adminCsvCancel">Cancel</button>
-      <button type="button" class="btn btn--primary" id="adminCsvGo" disabled>Import</button>
+      <button type="button" class="btn btn--primary" id="adminCsvGo" disabled>${icon('upload')} Import</button>
     </div>`, {
     onMount: () => {
       let parsed = [];
@@ -240,7 +240,7 @@ function changePasswordModal() {
       </div>
       <div class="form-actions">
         <button type="button" class="btn btn--ghost" id="adminPwCancel">Cancel</button>
-        <button type="submit" class="btn btn--primary">Change Password</button>
+        <button type="submit" class="btn btn--primary">${icon('key-round')} Change Password</button>
       </div>
     </form>`, {
     onMount: () => {

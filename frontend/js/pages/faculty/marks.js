@@ -35,9 +35,9 @@ async function renderMarksTable() {
         <td>${t ? t.percentage + '%' : '—'}</td>
         <td>${t ? `<span class="badge badge--info" title="Grade point ${t.gradePoint} — ${escapeHtml(t.gradeText)}">${t.grade}</span>` : '—'}</td>
         <td class="table-actions">
-          ${m ? `<button class="btn btn--ghost btn--sm" data-release-marks="${m.id}" data-released="${m.released ? 1 : 0}" title="${m.released ? 'Released — click to withdraw' : 'Hidden from student — click to release'}">${m.released ? '🔓' : '🔒'}</button>` : ''}
-          <button class="btn btn--ghost btn--sm" data-edit-marks="${s.displayId}">Edit ✎</button>
-          ${m ? `<button class="btn btn--ghost btn--sm" data-reset-marks="${m.id}">Reset</button><button class="btn btn--danger btn--sm" data-del-marks="${m.id}">Delete</button>` : ''}
+          ${m ? `<button class="btn btn--ghost btn--sm" data-release-marks="${m.id}" aria-label="${m.released ? 'Withdraw marks' : 'Release marks'}" data-released="${m.released ? 1 : 0}" title="${m.released ? 'Released — click to withdraw' : 'Hidden from student — click to release'}">${icon(m.released ? 'lock-open' : 'lock')}</button>` : ''}
+          <button class="btn btn--ghost btn--sm" data-edit-marks="${s.displayId}">${icon('pencil')} Edit</button>
+          ${m ? `<button class="btn btn--ghost btn--sm" data-reset-marks="${m.id}">${icon('rotate-ccw')} Reset</button><button class="btn btn--danger btn--sm" data-del-marks="${m.id}">${icon('trash-2')} Delete</button>` : ''}
         </td>
       </tr>`;
   };
@@ -73,7 +73,7 @@ function confirmReleaseAllMarks() {
     <p class="faint" style="font-size:12.5px;">You can hide individual students again with the lock icon in the table.</p>
     <div class="form-actions">
       <button class="btn btn--ghost" id="relCancelBtn" type="button">Cancel</button>
-      <button class="btn btn--primary" id="relOkBtn" type="button">📢 Release All</button>
+      <button class="btn btn--primary" id="relOkBtn" type="button">${icon('megaphone')} Release All</button>
     </div>
   `, {
     onMount: () => {
@@ -116,7 +116,7 @@ async function openGroupMarksModal() {
       <p class="faint" style="font-size:12.5px;">Applied to every member of the group. Blank fields keep each member's existing mark. For marks that differ per student, open the group's Members window instead, or use Edit on the Marks page.</p>
       <div class="form-actions">
         <button type="button" class="btn btn--ghost" id="cancelGroupMarksForm">Cancel</button>
-        <button type="submit" class="btn btn--primary">Apply to Group</button>
+        <button type="submit" class="btn btn--primary">${icon('check')} Apply to Group</button>
       </div>
     </form>
   `, {
@@ -152,7 +152,7 @@ async function openMarksModal(studentDisplayId) {
       <p class="faint" style="font-size:12.5px;">Continuous Assessment is out of ${CA_TOTAL}. Leave a box empty if that assessment isn't marked yet — it is then left out of the total.</p>
       <div class="form-actions">
         <button type="button" class="btn btn--ghost" id="cancelMarksForm">Cancel</button>
-        <button type="submit" class="btn btn--primary">Save Marks</button>
+        <button type="submit" class="btn btn--primary">${icon('save')} Save Marks</button>
       </div>
     </form>
   `, {

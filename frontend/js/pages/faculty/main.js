@@ -11,7 +11,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   if (FAC.type === 'admin') {
     // Admins use this dashboard with full faculty access, plus a way back to their panel.
     const nav = document.querySelector('.sidebar .nav-link');
-    nav.insertAdjacentHTML('beforebegin', '<a class="nav-link" href="admin.html" style="text-decoration:none;"><span class="nav-link__icon">⚙</span> Admin Panel</a>');
+    nav.insertAdjacentHTML('beforebegin', `<a class="nav-link" href="admin.html" style="text-decoration:none;"><span class="nav-link__icon">${icon('shield-check')}</span> Admin Panel</a>`);
   }
 
   wireSidebarNav();
@@ -141,7 +141,7 @@ function renderSidebarUser() { /* sidebar shows nav only in this theme; user liv
 
 async function renderTopbar() {
   const welcome = document.getElementById('welcomeMsg');
-  if (welcome) welcome.textContent = `Welcome back, ${FAC.name.trim().split(' ')[0]} 👋`;
+  if (welcome) welcome.textContent = `Welcome back, ${FAC.name.trim().split(' ')[0]}`;
   const topbarUser = document.getElementById('topbarUser');
   if (topbarUser) {
     topbarUser.innerHTML = `

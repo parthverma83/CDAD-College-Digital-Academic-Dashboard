@@ -13,26 +13,26 @@ async function renderOverview() {
 
   statsHost.innerHTML = `
     <div class="stat-card stat-card--blue">
-      <div class="stat-card__icon">▦</div>
+      <div class="stat-card__icon">${icon('users-round')}</div>
       <div class="stat-card__label">My Group</div>
       <div class="stat-card__value">${group ? escapeHtml(group.displayId) : '—'}</div>
       <div class="stat-card__sub stat-card__sub--muted">${group ? `Team Members: ${memberCount(group)}` : 'Not assigned'}</div>
     </div>
     <div class="stat-card stat-card--green">
-      <div class="stat-card__icon">◔</div>
+      <div class="stat-card__icon">${icon('trending-up')}</div>
       <div class="stat-card__label">Project Progress</div>
       <div class="stat-card__value">${project ? project.progress : 0}%</div>
       <div class="stat-card__sub stat-card__sub--good">${project ? escapeHtml(project.status) : 'No project'}</div>
       <div class="stat-card__bar"><div class="bar-track"><div class="bar-fill" style="width:${project ? project.progress : 0}%"></div></div></div>
     </div>
     <div class="stat-card stat-card--purple">
-      <div class="stat-card__icon">▤</div>
+      <div class="stat-card__icon">${icon('award')}</div>
       <div class="stat-card__label">Current Marks</div>
       <div class="stat-card__value">${totals ? totals.total + ' / ' + totals.max : '—'}</div>
       <div class="stat-card__sub stat-card__sub--good">${totals ? (totals.percentage >= 60 ? 'Good' : 'Needs Improvement') : 'Not entered'}</div>
     </div>
     <div class="stat-card stat-card--orange">
-      <div class="stat-card__icon">◈</div>
+      <div class="stat-card__icon">${icon('presentation')}</div>
       <div class="stat-card__label">Presentation</div>
       <div class="stat-card__value" style="font-size:16px;">${pres ? formatDate(pres.date) : 'Pending'}</div>
       <div class="stat-card__sub stat-card__sub--warn">${pres ? escapeHtml(pres.status) : 'Not Scheduled'}</div>
@@ -49,7 +49,7 @@ async function renderOverview() {
           <div><div class="faint" style="font-size:11px; text-transform:uppercase;">Deadline</div><div style="font-size:13px;">${formatDate(project.deadline)}</div></div>
           <div><div class="faint" style="font-size:11px; text-transform:uppercase;">Status</div><div style="font-size:13px;">${escapeHtml(project.status)}</div></div>
         </div>
-        <button class="btn btn--primary btn--sm" onclick="showView('project')">View Project Details</button>
+        <button class="btn btn--primary btn--sm" onclick="showView('project')">${icon('arrow-right')} View Project Details</button>
       ` : emptyState('No project assigned yet.')}
     </div>
     <div class="section">
@@ -58,7 +58,7 @@ async function renderOverview() {
         <div style="font-weight:700; font-size:14px;" class="mono">${escapeHtml(project.repoName || '—')}</div>
         <a href="${escapeHtml(project.githubUrl || '#')}" target="_blank" rel="noopener" style="font-size:12.5px; word-break:break-all;">${escapeHtml(project.githubUrl || 'No URL set')}</a>
         <div class="faint" style="font-size:11.5px; margin:10px 0 14px;">Last Updated: ${formatDate(project.deadline)}</div>
-        <a class="btn btn--primary btn--sm" href="${escapeHtml(project.githubUrl || '#')}" target="_blank" rel="noopener">Open Repository</a>
+        <a class="btn btn--primary btn--sm" href="${escapeHtml(project.githubUrl || '#')}" target="_blank" rel="noopener">${icon('external-link')} Open Repository</a>
       ` : emptyState('No repository linked.')}
     </div>`;
 
@@ -98,7 +98,7 @@ async function renderOverview() {
 
 function stageChecklistRow(name, status, interactive) {
   const cls = status === 'Completed' ? 'done' : status === 'In Progress' ? 'active' : 'pending';
-  const dotContent = status === 'Completed' ? '✓' : status === 'In Progress' ? '' : '';
+  const dotContent = status === 'Completed' ? icon('check') : '';
   return `
     <div class="checklist-row${interactive ? ' checklist-row--clickable' : ''}" ${interactive ? `data-stage="${escapeHtml(name)}"` : ''}>
       <span class="check-dot check-dot--${cls}">${dotContent}</span>
@@ -108,8 +108,8 @@ function stageChecklistRow(name, status, interactive) {
 }
 
 function notifIcon(type) {
-  const map = { info: 'ℹ', alert: '⚠', reminder: '⏰', request: '✎', 'peer-request': '◎', presentation: '◈', announcement: '✉' };
-  return map[type] || '🔔';
+  const map = { info: 'info', alert: 'triangle-alert', reminder: 'alarm-clock', request: 'inbox', 'peer-request': 'handshake', presentation: 'presentation', announcement: 'megaphone' };
+  return icon(map[type] || 'bell');
 }
 
 function timeAgo(iso) {

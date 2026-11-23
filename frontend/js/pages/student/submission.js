@@ -39,13 +39,13 @@ async function renderExamSubmissionCards(host, amLeader) {
             <div class="card__top"><div class="card__title">${EXAM_LABELS[exam] || exam}</div>
               <span class="badge ${s ? 'badge--good' : 'badge--warn'}">${s ? 'Submitted' : 'Pending'}</span></div>
             ${s ? `
-              ${s.link ? `<div class="card__meta"><a href="${escapeHtml(s.link)}" target="_blank" rel="noopener">Link ↗</a></div>` : ''}
+              ${s.link ? `<div class="card__meta"><a href="${escapeHtml(s.link)}" target="_blank" rel="noopener">${icon('external-link')} Link</a></div>` : ''}
               ${s.files.map((f) => `<div class="card__meta"><a href="/api/exam-submissions/files/${f.id}" target="_blank">${escapeHtml(f.name)}</a> <span class="faint">(${formatFileSize(f.size)})</span></div>`).join('')}
               <div class="card__meta faint">by ${escapeHtml(s.submittedBy)} · ${formatDateTime(s.submittedAt)}</div>` : ''}
-            ${dl ? `<div class="card__meta" style="${closed ? 'color:var(--red);' : ''}">${closed ? '🔒 Closed' : '⏰ Due'} ${formatDateTime(dl)}</div>` : ''}
+            ${dl ? `<div class="card__meta" style="${closed ? 'color:var(--red);' : ''}">${closed ? icon('lock') + ' Closed' : icon('alarm-clock') + ' Due'} ${formatDateTime(dl)}</div>` : ''}
             ${amLeader ? (closed
-              ? `<div class="card__actions"><button class="btn btn--ghost btn--sm" disabled>Submissions closed</button></div>`
-              : `<div class="card__actions"><button class="btn btn--ghost btn--sm" data-exam-submit="${exam}">${s ? 'Update' : 'Submit'}</button></div>`) : ''}
+              ? `<div class="card__actions"><button class="btn btn--ghost btn--sm" disabled>${icon('lock')} Submissions closed</button></div>`
+              : `<div class="card__actions"><button class="btn btn--ghost btn--sm" data-exam-submit="${exam}">${icon('upload')} ${s ? 'Update' : 'Submit'}</button></div>`) : ''}
           </div>`;
       }).join('')}
     </div>`;
@@ -115,7 +115,7 @@ function renderSubmissionBlock(project, hostId, amLeader) {
       <h4 style="font-size:13.5px; margin-bottom:10px;">Final Submission</h4>
       <p class="muted" style="font-size:12.5px; margin-bottom:12px;">Once your project is ready, submit a link (repository, drive folder, etc.) and/or attach a file (PDF, PPT, CSV, or DOC) for faculty to review.</p>
       ${amLeader
-        ? `<button class="btn btn--primary btn--sm" data-submit-project-btn>Submit Project</button>`
+        ? `<button class="btn btn--primary btn--sm" data-submit-project-btn>${icon('upload')} Submit Project</button>`
         : `<p class="field-hint">Only your team leader (${escapeHtml(project.teamLeader || 'not set')}) can submit this project.</p>`}`;
     const submitBtn = host.querySelector('[data-submit-project-btn]');
     if (submitBtn) submitBtn.addEventListener('click', () => openSubmitProjectModal(project));

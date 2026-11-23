@@ -14,9 +14,9 @@ async function renderRequests() {
       ${r.response ? `<div class="list-item__body"><strong>Response:</strong> ${escapeHtml(r.response)}</div>` : ''}
       <div class="list-item__foot">
         ${r.status === 'Pending' ? `
-          <button class="btn btn--primary btn--sm" data-accept-req="${r.id}">Accept</button>
-          <button class="btn btn--ghost btn--sm" data-reject-req="${r.id}">Reject</button>` : '<span></span>'}
-        <button class="btn btn--danger btn--sm" data-del-req="${r.id}">Delete</button>
+          <button class="btn btn--primary btn--sm" data-accept-req="${r.id}">${icon('check')} Accept</button>
+          <button class="btn btn--ghost btn--sm" data-reject-req="${r.id}">${icon('x')} Reject</button>` : '<span></span>'}
+        <button class="btn btn--danger btn--sm" data-del-req="${r.id}">${icon('trash-2')} Delete</button>
       </div>
     </div>`).join('') : emptyState('No requests submitted yet.');
 

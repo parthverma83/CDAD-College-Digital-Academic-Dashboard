@@ -12,7 +12,7 @@ async function renderProjectPanel() {
       host.innerHTML = `
         ${emptyState('Your group has no project yet. As team leader, you can create one.')}
         <div style="text-align:center; margin-top:-10px;">
-          <button class="btn btn--primary" id="createMyProjectBtn">+ Create Project</button>
+          <button class="btn btn--primary" id="createMyProjectBtn">${icon('plus')} Create Project</button>
         </div>`;
       document.getElementById('createMyProjectBtn').addEventListener('click', () => openCreateMyProjectModal(group));
     } else {
@@ -26,7 +26,7 @@ async function renderProjectPanel() {
       <div><span class="faint mono" style="font-size:11px;">${escapeHtml(project.displayId)}</span><h3>${escapeHtml(project.title)}</h3></div>
       <div style="display:flex; gap:8px; align-items:center;">
         <span class="badge ${statusBadgeClass(project.status)}">${escapeHtml(project.status)}</span>
-        <button class="btn btn--ghost btn--sm" id="editMyProjectBtn">Edit ✎</button>
+        <button class="btn btn--ghost btn--sm" id="editMyProjectBtn">${icon('pencil')} Edit</button>
       </div>
     </div>
     <p style="font-size:13.5px; color:var(--ink-soft); margin-bottom:18px;">${escapeHtml(project.description) || 'No description yet.'}</p>
@@ -82,7 +82,7 @@ function openCreateMyProjectModal(group) {
       </div>
       <div class="form-actions">
         <button type="button" class="btn btn--ghost" id="cancelCreateMyProject">Cancel</button>
-        <button type="submit" class="btn btn--primary">Create Project</button>
+        <button type="submit" class="btn btn--primary">${icon('plus')} Create Project</button>
       </div>
     </form>
   `, {
@@ -143,7 +143,7 @@ function openEditMyProjectModal(project) {
       </div>
       <div class="form-actions">
         <button type="button" class="btn btn--ghost" id="cancelEditMyProject">Cancel</button>
-        <button type="submit" class="btn btn--primary">Save Changes</button>
+        <button type="submit" class="btn btn--primary">${icon('save')} Save Changes</button>
       </div>
     </form>
   `, {

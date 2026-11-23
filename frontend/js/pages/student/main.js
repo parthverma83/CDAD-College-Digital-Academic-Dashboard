@@ -105,7 +105,7 @@ function enforceProfileCompletion() {
         <div class="field full"><label>Phone Number</label><input name="phone" required placeholder="e.g. 9876543210" value="${escapeHtml(ME.phone || '')}"></div>
       </div>
       <div class="form-actions">
-        <button type="submit" class="btn btn--primary">Save &amp; Continue</button>
+        <button type="submit" class="btn btn--primary">${icon('save')} Save &amp; Continue</button>
       </div>
     </form>
   `, {
@@ -132,7 +132,7 @@ function enforceProfileCompletion() {
 /* ================= Topbar ================= */
 async function renderTopbar() {
   const welcome = document.getElementById('welcomeMsg');
-  if (welcome) welcome.textContent = `Welcome back, ${ME.name.trim().split(' ')[0]} 👋`;
+  if (welcome) welcome.textContent = `Welcome back, ${ME.name.trim().split(' ')[0]}`;
 
   const topbarUser = document.getElementById('topbarUser');
   if (topbarUser) {

@@ -12,10 +12,10 @@ async function renderPresentations() {
       <td>${escapeHtml(p.venue)}</td>
       <td><span class="badge ${statusBadgeClass(p.status)}">${escapeHtml(p.status)}</span></td>
       <td class="table-actions">
-        <button class="btn btn--ghost btn--sm" data-edit-pres="${p.id}">Edit ✎</button>
-        <button class="btn btn--ghost btn--sm" data-complete-pres="${p.id}">Complete</button>
-        <button class="btn btn--ghost btn--sm" data-cancel-pres="${p.id}">Cancel</button>
-        <button class="btn btn--danger btn--sm" data-del-pres="${p.id}">Delete</button>
+        <button class="btn btn--ghost btn--sm" data-edit-pres="${p.id}">${icon('pencil')} Edit</button>
+        <button class="btn btn--ghost btn--sm" data-complete-pres="${p.id}">${icon('circle-check')} Complete</button>
+        <button class="btn btn--ghost btn--sm" data-cancel-pres="${p.id}">${icon('ban')} Cancel</button>
+        <button class="btn btn--danger btn--sm" data-del-pres="${p.id}">${icon('trash-2')} Delete</button>
       </td>
     </tr>`).join('') : `<tr class="empty-row"><td colspan="7">No presentations scheduled.</td></tr>`;
 
@@ -69,7 +69,7 @@ function openPresentationModal(pres) {
         </div>
         <div class="form-actions">
           <button type="button" class="btn btn--ghost" id="cancelPresForm">Cancel</button>
-          <button type="submit" class="btn btn--primary">Save</button>
+          <button type="submit" class="btn btn--primary">${icon('save')} Save</button>
         </div>
       </form>
     `, {

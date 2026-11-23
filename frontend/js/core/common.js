@@ -42,7 +42,8 @@ function showToast(message, kind) {
   }
   const toast = document.createElement('div');
   toast.className = `toast toast--${kind || 'info'}`;
-  toast.textContent = message;
+  toast.innerHTML = icon({ success: 'circle-check', error: 'circle-x' }[kind] || 'info') + '<span></span>';
+  toast.lastElementChild.textContent = message;
   host.appendChild(toast);
   requestAnimationFrame(() => toast.classList.add('toast--visible'));
   setTimeout(() => {
@@ -68,7 +69,7 @@ function ensureModalShell() {
     <div class="modal" role="dialog" aria-modal="true">
       <div class="modal__head">
         <h3 id="cdadModalTitle"></h3>
-        <button class="modal__close" id="cdadModalClose" aria-label="Close">&times;</button>
+        <button class="modal__close" id="cdadModalClose" aria-label="Close">${icon('x')}</button>
       </div>
       <div class="modal__body" id="cdadModalBody"></div>
     </div>`;
@@ -124,7 +125,7 @@ function confirmDelete(message, onConfirm) {
     <p class="confirm-warning">This action cannot be undone.</p>
     <div class="form-actions">
       <button class="btn btn--ghost" id="confirmCancelBtn" type="button">Cancel</button>
-      <button class="btn btn--danger" id="confirmOkBtn" type="button">Delete</button>
+      <button class="btn btn--danger" id="confirmOkBtn" type="button">${icon('trash-2')} Delete</button>
     </div>
   `, {
     onMount: () => {

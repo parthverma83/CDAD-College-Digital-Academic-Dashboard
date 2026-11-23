@@ -7,7 +7,7 @@ async function renderGroupPanel() {
     host.innerHTML = `
       ${emptyState('You are not assigned to a group yet.')}
       <div style="text-align:center; margin-top:-10px;">
-        <button class="btn btn--primary" id="createGroupBtn">+ Create Group</button>
+        <button class="btn btn--primary" id="createGroupBtn">${icon('plus')} Create Group</button>
       </div>`;
     document.getElementById('createGroupBtn').addEventListener('click', () => showView('creategroup'));
     return;
@@ -38,7 +38,7 @@ async function renderGroupPanel() {
           </div>
         </div>`).join('')}
     </div>
-    <button class="btn btn--danger btn--sm" id="leaveGroupBtn">Leave Group</button>`;
+    <button class="btn btn--danger btn--sm" id="leaveGroupBtn">${icon('log-out')} Leave Group</button>`;
 
   document.getElementById('leaveGroupBtn').addEventListener('click', () => {
     const warning = memberCount(group) <= 1
@@ -80,7 +80,7 @@ async function renderCreateGroupTab() {
     html += `
       <div class="section">
         <p style="font-size:13.5px; margin-bottom:14px;">You're already in <strong>${escapeHtml(myGroup.displayId)} — ${escapeHtml(myGroup.name)}</strong>. Go to <a href="javascript:void(0)" onclick="showView('group')">My Group</a> to see members, or leave it below to create/join a different one.</p>
-        <button class="btn btn--danger btn--sm" id="leaveGroupFromTabBtn">Leave Group</button>
+        <button class="btn btn--danger btn--sm" id="leaveGroupFromTabBtn">${icon('log-out')} Leave Group</button>
       </div>`;
     host.innerHTML = html;
     wireCreateGroupTabEvents(host);
@@ -127,7 +127,7 @@ async function renderCreateGroupTab() {
                 </label>`).join('') : '<span class="faint" style="font-size:12.5px;">No unassigned students available right now.</span>'}
             </div>
           </div>
-          <button type="submit" class="btn btn--primary" style="margin-top:14px;">Create Group</button>
+          <button type="submit" class="btn btn--primary" style="margin-top:14px;">${icon('plus')} Create Group</button>
         </form>
       </div>
 
@@ -138,7 +138,7 @@ async function renderCreateGroupTab() {
           <label>Leader's Student ID</label>
           <input type="text" id="joinLookupId" placeholder="ADT24SOCB0001">
         </div>
-        <button type="button" class="btn btn--ghost btn--sm" id="joinLookupBtn">Find Group</button>
+        <button type="button" class="btn btn--ghost btn--sm" id="joinLookupBtn">${icon('search')} Find Group</button>
         <div id="joinLookupResult" style="margin-top:14px;"></div>
 
         <h4 style="font-size:13px; margin:20px 0 10px;">My Sent Requests</h4>
@@ -193,7 +193,7 @@ function wireCreateGroupTabEvents(host) {
             </div>
           </div>
           <div class="field full" style="margin-top:10px;"><textarea id="joinRequestMessage" placeholder="Optional message to include..."></textarea></div>
-          <button type="button" class="btn btn--primary btn--sm" id="sendJoinRequestBtn" style="margin-top:8px;">Send Join Request</button>
+          <button type="button" class="btn btn--primary btn--sm" id="sendJoinRequestBtn" style="margin-top:8px;">${icon('send')} Send Join Request</button>
         </div>`;
       resultHost.querySelector('#sendJoinRequestBtn').addEventListener('click', async () => {
         const message = resultHost.querySelector('#joinRequestMessage').value.trim();
@@ -231,8 +231,8 @@ function joinRequestRow(r, students) {
       </div>
       ${r.message ? `<div class="list-item__body">"${escapeHtml(r.message)}"</div>` : ''}
       <div class="list-item__foot">
-        <button class="btn btn--primary btn--sm" data-accept-join="${r.id}">Accept</button>
-        <button class="btn btn--ghost btn--sm" data-reject-join="${r.id}">Reject</button>
+        <button class="btn btn--primary btn--sm" data-accept-join="${r.id}">${icon('check')} Accept</button>
+        <button class="btn btn--ghost btn--sm" data-reject-join="${r.id}">${icon('x')} Reject</button>
       </div>
     </div>`;
 }

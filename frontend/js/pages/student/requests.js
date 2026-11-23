@@ -7,7 +7,7 @@ async function renderRequests() {
   host.innerHTML = `
     <div class="section__head">
       <h3>My Requests to Faculty</h3>
-      <button class="btn btn--primary btn--sm" id="newRequestBtn">+ New Request</button>
+      <button class="btn btn--primary btn--sm" id="newRequestBtn">${icon('plus')} New Request</button>
     </div>
     ${mine.length ? mine.map(academicRequestRow).join('') : emptyState('You have not submitted any requests.')}`;
   document.getElementById('newRequestBtn').addEventListener('click', openNewRequestModal);
@@ -46,7 +46,7 @@ async function openNewRequestModal() {
       </div>
       <div class="form-actions">
         <button type="button" class="btn btn--ghost" id="cancelNewRequest">Cancel</button>
-        <button type="submit" class="btn btn--primary">Submit Request</button>
+        <button type="submit" class="btn btn--primary">${icon('send')} Submit Request</button>
       </div>
     </form>
   `, {

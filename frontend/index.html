@@ -7,6 +7,7 @@
 <link rel="stylesheet" href="css/style.css">
 <link rel="stylesheet" href="css/forms.css">
 <link rel="stylesheet" href="css/responsive.css">
+<link rel="icon" type="image/svg+xml" href="favicon.svg">
 </head>
 <body>
   <div class="login-page">
@@ -42,28 +43,28 @@
         <h2>Welcome Back!</h2>
         <p class="muted">Login to continue to CDAD</p>
         <div class="role-switch">
-          <button type="button" class="active" data-role="student">Student</button>
-          <button type="button" data-role="faculty">Faculty</button>
-          <button type="button" data-role="admin">Admin</button>
+          <button type="button" class="active" data-role="student"><i data-icon="graduation-cap"></i> Student</button>
+          <button type="button" data-role="faculty"><i data-icon="briefcase-business"></i> Faculty</button>
+          <button type="button" data-role="admin"><i data-icon="shield-check"></i> Admin</button>
         </div>
         <div class="login-error" id="loginError"></div>
         <form id="loginForm">
           <div class="login-field">
             <label id="emailLabel">Student ID</label>
-            <input type="text" name="identifier" id="loginEmail" required placeholder="ADT24SOCB0001">
+            <span class="input-icon"><i data-icon="user-round"></i><input type="text" name="identifier" id="loginEmail" required placeholder="ADT24SOCB0001"></span>
           </div>
           <div class="login-field">
             <label>Password</label>
             <div class="login-field-password">
-              <input type="password" name="password" id="loginPassword" required placeholder="••••••••">
-              <button type="button" id="togglePassword">Show</button>
+              <span class="input-icon"><i data-icon="lock"></i><input type="password" name="password" id="loginPassword" required placeholder="••••••••"></span>
+              <button type="button" id="togglePassword" aria-label="Show password" title="Show password"><i data-icon="eye"></i></button>
             </div>
           </div>
           <div class="login-row-between">
             <label class="remember-me"><input type="checkbox" checked> Remember me</label>
             <a href="#" id="forgotPasswordLink">Forgot Password?</a>
           </div>
-          <button type="submit" class="btn btn--primary" style="width:100%; justify-content:center; padding:12px;">Login</button>
+          <button type="submit" class="btn btn--primary" style="width:100%; justify-content:center; padding:12px;"><i data-icon="log-in"></i> Login</button>
         </form>
         
         <div class="login-footer">&copy; 2026 CDAD. All rights reserved.</div>
@@ -71,6 +72,7 @@
     </div>
   </div>
 
+  <script src="js/core/icons.js"></script>
   <script src="js/core/storage.js"></script>
   <script src="js/core/common.js"></script>
   <script src="js/core/auth.js"></script>
@@ -89,10 +91,13 @@
     });
 
     document.getElementById('togglePassword').addEventListener('click', (e) => {
+      const toggle = e.currentTarget;
       const input = document.getElementById('loginPassword');
       const show = input.type === 'password';
       input.type = show ? 'text' : 'password';
-      e.target.textContent = show ? 'Hide' : 'Show';
+      toggle.innerHTML = icon(show ? 'eye-off' : 'eye');
+      toggle.title = show ? 'Hide password' : 'Show password';
+      toggle.setAttribute('aria-label', toggle.title);
     });
 
     document.getElementById('loginForm').addEventListener('submit', async (e) => {
@@ -141,7 +146,7 @@
               <label>Captcha</label>
               <div style="display:flex; align-items:center; gap:10px;">
                 <div id="captchaImage" style="border-radius:8px; overflow:hidden; min-height:56px; min-width:170px; background:#eef2fb;"></div>
-                <button type="button" class="btn btn--ghost btn--sm" id="refreshCaptcha" title="Get a new captcha">↻ New</button>
+                <button type="button" class="btn btn--ghost btn--sm" id="refreshCaptcha" title="Get a new captcha">${icon('refresh-cw')} New</button>
               </div>
               <input name="captchaText" required autocomplete="off" maxlength="5" placeholder="Type the characters above" style="margin-top:8px; text-transform:uppercase;">
             </div>
@@ -150,7 +155,7 @@
           </div>
           <div class="form-actions">
             <button type="button" class="btn btn--ghost" id="cancelForgotPassword">Cancel</button>
-            <button type="submit" class="btn btn--primary">Reset Password</button>
+            <button type="submit" class="btn btn--primary">${icon('key-round')} Reset Password</button>
           </div>
         </form>
       `, {

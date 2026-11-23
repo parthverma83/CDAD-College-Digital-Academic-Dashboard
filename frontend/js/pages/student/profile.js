@@ -5,7 +5,7 @@ function renderProfile() {
   host.innerHTML = `
     <div class="section__head">
       <h3>My Profile</h3>
-      <button class="btn btn--ghost btn--sm" id="editProfileBtn">Edit ✎</button>
+      <button class="btn btn--ghost btn--sm" id="editProfileBtn">${icon('pencil')} Edit</button>
     </div>
     <div style="display:flex; gap:18px; align-items:center; margin-bottom:16px;">
       <div class="avatar avatar--lg">${avatarHtml(ME)}</div>
@@ -43,7 +43,7 @@ function openEditProfileModal() {
       <p class="field-hint" style="margin-top:8px;">Course, year, department, group and role can only be changed by faculty.</p>
       <div class="form-actions">
         <button type="button" class="btn btn--ghost" id="cancelProfileEdit">Cancel</button>
-        <button type="submit" class="btn btn--primary">Save Changes</button>
+        <button type="submit" class="btn btn--primary">${icon('save')} Save Changes</button>
       </div>
     </form>
   `, {

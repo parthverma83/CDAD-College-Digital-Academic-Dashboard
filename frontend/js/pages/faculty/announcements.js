@@ -12,8 +12,8 @@ async function renderAnnouncements() {
       <div class="list-item__body">${escapeHtml(a.message)}</div>
       <div class="list-item__body faint">${escapeHtml(a.author)} &middot; ${formatDate(a.date)}</div>
       <div class="list-item__foot">
-        <button class="btn btn--ghost btn--sm" data-edit-ann="${a.id}">Edit ✎</button>
-        <button class="btn btn--danger btn--sm" data-del-ann="${a.id}">Delete</button>
+        <button class="btn btn--ghost btn--sm" data-edit-ann="${a.id}">${icon('pencil')} Edit</button>
+        <button class="btn btn--danger btn--sm" data-del-ann="${a.id}">${icon('trash-2')} Delete</button>
       </div>
     </div>`).join('') : emptyState('No announcements yet.');
 
@@ -42,7 +42,7 @@ function openAnnouncementModal(ann) {
       </div>
       <div class="form-actions">
         <button type="button" class="btn btn--ghost" id="cancelAnnForm">Cancel</button>
-        <button type="submit" class="btn btn--primary">Save</button>
+        <button type="submit" class="btn btn--primary">${icon('save')} Save</button>
       </div>
     </form>
   `, {

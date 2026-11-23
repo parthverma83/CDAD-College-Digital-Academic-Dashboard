@@ -59,11 +59,11 @@ function peerDirectoryCard(s, connections, sent, myGroup) {
   let actionHtml;
   if (isConnected) actionHtml = `<span class="badge badge--good">Connected</span>`;
   else if (pendingSent) actionHtml = `<span class="badge badge--warn">Request Pending</span>`;
-  else actionHtml = `<button class="btn btn--ghost btn--sm" data-send-peer="${s.displayId}">Send Request</button>`;
+  else actionHtml = `<button class="btn btn--ghost btn--sm" data-send-peer="${s.displayId}">${icon('send')} Send Request</button>`;
 
   const iAmLeader = myGroup && myGroup.teamLeader === ME.displayId;
   const canInvite = iAmLeader && isConnected && !s.group;
-  const inviteHtml = canInvite ? `<button class="btn btn--primary btn--sm" data-invite-group="${s.displayId}">Invite to Group</button>` : '';
+  const inviteHtml = canInvite ? `<button class="btn btn--primary btn--sm" data-invite-group="${s.displayId}">${icon('user-plus')} Invite to Group</button>` : '';
 
   return `
     <div class="card">
@@ -88,8 +88,8 @@ function receivedPeerRow(r, students) {
       </div>
       ${r.message ? `<div class="list-item__body">"${escapeHtml(r.message)}"</div>` : ''}
       <div class="list-item__foot">
-        <button class="btn btn--primary btn--sm" data-accept-peer="${r.id}">Accept</button>
-        <button class="btn btn--ghost btn--sm" data-reject-peer="${r.id}">Reject</button>
+        <button class="btn btn--primary btn--sm" data-accept-peer="${r.id}">${icon('check')} Accept</button>
+        <button class="btn btn--ghost btn--sm" data-reject-peer="${r.id}">${icon('x')} Reject</button>
       </div>
     </div>`;
 }
@@ -112,7 +112,7 @@ function connectionRow(displayId, students) {
           <div class="avatar" style="width:30px;height:30px;font-size:11px;">${s ? avatarHtml(s) : '?'}</div>
           <div class="list-item__title">${s ? escapeHtml(s.name) : displayId} <span class="faint mono" style="font-weight:400;">${escapeHtml(displayId)}</span></div>
         </div>
-        <button class="btn btn--ghost btn--sm" data-remove-connection="${displayId}">Remove</button>
+        <button class="btn btn--ghost btn--sm" data-remove-connection="${displayId}">${icon('user-minus')} Remove</button>
       </div>
     </div>`;
 }
@@ -125,7 +125,7 @@ async function openSendPeerRequestModal(toDisplayId) {
       <div class="field full"><label>Message (optional)</label><textarea name="message" placeholder="Say why you'd like to connect..."></textarea></div>
       <div class="form-actions">
         <button type="button" class="btn btn--ghost" id="cancelPeerReq">Cancel</button>
-        <button type="submit" class="btn btn--primary">Send Request</button>
+        <button type="submit" class="btn btn--primary">${icon('send')} Send Request</button>
       </div>
     </form>
   `, {

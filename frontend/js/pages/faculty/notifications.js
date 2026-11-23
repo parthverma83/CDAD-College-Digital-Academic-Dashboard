@@ -16,8 +16,8 @@ async function renderNotifications() {
       </div>
       <div class="list-item__body">${escapeHtml(n.message)}</div>
       <div class="list-item__foot">
-        <button class="btn btn--ghost btn--sm" data-toggle-read="${n.id}" data-current-read="${n.read ? '1' : '0'}">${n.read ? 'Mark unread' : 'Mark read'}</button>
-        <button class="btn btn--danger btn--sm" data-del-notif="${n.id}">Delete</button>
+        <button class="btn btn--ghost btn--sm" data-toggle-read="${n.id}" data-current-read="${n.read ? '1' : '0'}">${icon(n.read ? 'mail' : 'mail-open')} ${n.read ? 'Mark unread' : 'Mark read'}</button>
+        <button class="btn btn--danger btn--sm" data-del-notif="${n.id}">${icon('trash-2')} Delete</button>
       </div>
     </div>`).join('') : emptyState('No notifications yet.');
 
@@ -50,7 +50,7 @@ function openAddNotificationModal() {
         </div>
         <div class="form-actions">
           <button type="button" class="btn btn--ghost" id="cancelNotifForm">Cancel</button>
-          <button type="submit" class="btn btn--primary">Create</button>
+          <button type="submit" class="btn btn--primary">${icon('plus')} Create</button>
         </div>
       </form>
     `, {

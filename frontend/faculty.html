@@ -8,28 +8,29 @@
 <link rel="stylesheet" href="css/dashboard.css">
 <link rel="stylesheet" href="css/forms.css">
 <link rel="stylesheet" href="css/responsive.css">
+<link rel="icon" type="image/svg+xml" href="favicon.svg">
 </head>
 <body>
 <div class="app-shell">
   <aside class="sidebar">
     <div class="sidebar__brand">
-      <div class="sidebar__mark">🎓</div>
+      <div class="sidebar__mark"><i data-icon="graduation-cap"></i></div>
       <div class="sidebar__brand-text"><strong>CDAD</strong><span>Faculty Portal</span></div>
     </div>
-    <button class="nav-link active" data-view="overview"><span class="nav-link__icon">▣</span> Dashboard</button>
-    <button class="nav-link" data-view="students"><span class="nav-link__icon">●</span> Students</button>
-    <button class="nav-link" data-view="groups"><span class="nav-link__icon">▦</span> Groups</button>
-    <button class="nav-link" data-view="projects"><span class="nav-link__icon">◧</span> Projects</button>
-    <button class="nav-link" data-view="marks"><span class="nav-link__icon">▤</span> Marks</button>
-    <button class="nav-link" data-view="presentations"><span class="nav-link__icon">◈</span> Presentations</button>
-    <button class="nav-link" data-view="submissions"><span class="nav-link__icon">☑</span> Submissions</button>
-    <button class="nav-link" data-view="requests"><span class="nav-link__icon">✎</span> Requests</button>
-    <button class="nav-link" data-view="notifications"><span class="nav-link__icon">◔</span> Notifications <span class="nav-link__badge" id="sidebarNotifBadge" style="display:none;"></span></button>
-    <button class="nav-link" data-view="announcements"><span class="nav-link__icon">✉</span> Announcements</button>
-    <button class="nav-link" data-view="profile"><span class="nav-link__icon">◎</span> My Profile</button>
-    <button class="nav-link" data-view="activity"><span class="nav-link__icon">≡</span> Activity Log</button>
+    <button class="nav-link active" data-view="overview"><span class="nav-link__icon"><i data-icon="layout-dashboard"></i></span> Dashboard</button>
+    <button class="nav-link" data-view="students"><span class="nav-link__icon"><i data-icon="user-round"></i></span> Students</button>
+    <button class="nav-link" data-view="groups"><span class="nav-link__icon"><i data-icon="users-round"></i></span> Groups</button>
+    <button class="nav-link" data-view="projects"><span class="nav-link__icon"><i data-icon="folder-kanban"></i></span> Projects</button>
+    <button class="nav-link" data-view="marks"><span class="nav-link__icon"><i data-icon="award"></i></span> Marks</button>
+    <button class="nav-link" data-view="presentations"><span class="nav-link__icon"><i data-icon="presentation"></i></span> Presentations</button>
+    <button class="nav-link" data-view="submissions"><span class="nav-link__icon"><i data-icon="file-check"></i></span> Submissions</button>
+    <button class="nav-link" data-view="requests"><span class="nav-link__icon"><i data-icon="inbox"></i></span> Requests</button>
+    <button class="nav-link" data-view="notifications"><span class="nav-link__icon"><i data-icon="bell"></i></span> Notifications <span class="nav-link__badge" id="sidebarNotifBadge" style="display:none;"></span></button>
+    <button class="nav-link" data-view="announcements"><span class="nav-link__icon"><i data-icon="megaphone"></i></span> Announcements</button>
+    <button class="nav-link" data-view="profile"><span class="nav-link__icon"><i data-icon="circle-user-round"></i></span> My Profile</button>
+    <button class="nav-link" data-view="activity"><span class="nav-link__icon"><i data-icon="history"></i></span> Activity Log</button>
     <div class="sidebar__footer">
-      <button class="logout-btn" id="logoutBtn"><span class="nav-link__icon">⏻</span> Logout</button>
+      <button class="logout-btn" id="logoutBtn"><span class="nav-link__icon"><i data-icon="log-out"></i></span> Logout</button>
     </div>
   </aside>
 
@@ -37,15 +38,15 @@
     <!-- OVERVIEW -->
     <section class="view active" id="view-overview">
       <div class="topbar">
-        <div><h1>Dashboard</h1><div class="topbar__sub" id="welcomeMsg">Welcome back 👋</div></div>
+        <div><h1>Dashboard</h1><div class="topbar__sub" id="welcomeMsg">Welcome back</div></div>
         <div class="topbar__utility">
-          <button class="icon-btn" title="Notifications" onclick="showView('notifications')">🔔<span class="icon-btn__badge" id="notifBadge" style="display:none;"></span></button>
+          <button class="icon-btn" title="Notifications" onclick="showView('notifications')"><i data-icon="bell"></i><span class="icon-btn__badge" id="notifBadge" style="display:none;"></span></button>
           <div class="topbar-user" id="topbarUser"></div>
         </div>
       </div>
       <div class="stat-grid" id="overviewStats"></div>
       <div class="section">
-        <div class="section__head"><h3>Division Overview</h3><span class="faint" style="font-size:12.5px;">Click a division to open its submissions</span></div>
+        <div class="section__head"><h3><i data-icon="building-2"></i> Division Overview</h3><span class="faint" style="font-size:12.5px;">Click a division to open its submissions</span></div>
         <div class="table-wrap">
           <table class="data-table">
             <thead><tr><th>Division</th><th>Groups</th><th>Students</th><th>TA1</th><th>TA2</th><th>End Sem</th><th>Presentations</th></tr></thead>
@@ -55,16 +56,16 @@
       </div>
       <div class="dash-grid dash-grid--2">
         <div class="section">
-          <div class="section__head"><h3>Upcoming</h3></div>
+          <div class="section__head"><h3><i data-icon="calendar-clock"></i> Upcoming</h3></div>
           <div class="notif-mini-list" id="overviewUpcoming"></div>
         </div>
         <div class="section">
-          <div class="section__head"><h3>Recent Activity</h3><a class="section__link" href="#" onclick="showView('activity'); return false;">View all</a></div>
+          <div class="section__head"><h3><i data-icon="history"></i> Recent Activity</h3><a class="section__link" href="#" onclick="showView('activity'); return false;">View all</a></div>
           <div class="notif-mini-list" id="overviewActivity"></div>
         </div>
       </div>
       <div class="section">
-        <div class="section__head"><h3>Project Status Breakdown</h3></div>
+        <div class="section__head"><h3><i data-icon="chart-column"></i> Project Status Breakdown</h3></div>
         <div class="bar-chart" id="projectStatusChart"></div>
       </div>
     </section>
@@ -74,24 +75,24 @@
       <div class="topbar">
         <div><h1>Students Overview</h1><div class="topbar__sub">Manage every student record</div></div>
         <div class="topbar__actions">
-          <button class="btn btn--ghost" id="importStudentsBtn">Import CSV</button>
-          <button class="btn btn--ghost" id="importSectionBtn" title="Import students of one section / division from a CSV">🏫 Import Section</button>
-          <button class="btn btn--danger" id="deleteAllStudentsBtn">Delete All</button>
-          <button class="btn btn--primary" id="addStudentBtn">+ Add Student</button>
+          <button class="btn btn--ghost" id="importStudentsBtn"><i data-icon="upload"></i> Import CSV</button>
+          <button class="btn btn--ghost" id="importSectionBtn" title="Import students of one section / division from a CSV"><i data-icon="school"></i> Import Section</button>
+          <button class="btn btn--danger" id="deleteAllStudentsBtn"><i data-icon="trash-2"></i> Delete All</button>
+          <button class="btn btn--primary" id="addStudentBtn"><i data-icon="plus"></i> Add Student</button>
         </div>
       </div>
       <div class="section">
         <div class="filter-bar" id="studentSectionTabs" style="gap:8px; flex-wrap:wrap; margin-bottom:10px;"></div>
         <div class="filter-bar">
-          <input type="search" id="studentSearch" placeholder="Search students...">
+          <span class="search-box"><i data-icon="search"></i><input type="search" id="studentSearch" placeholder="Search students..."></span>
           <select id="studentGroupFilter"></select>
           <select id="studentStatusFilter">
             <option value="">All Status</option>
             <option>Active</option>
             <option>Inactive</option>
           </select>
-          <button class="btn btn--ghost btn--sm" id="assignSectionBtn" title="Put every student currently listed into a section">🏫 Assign Section</button>
-          <button class="btn btn--ghost btn--sm" id="exportStudentsBtn">Export</button>
+          <button class="btn btn--ghost btn--sm" id="assignSectionBtn" title="Put every student currently listed into a section"><i data-icon="school"></i> Assign Section</button>
+          <button class="btn btn--ghost btn--sm" id="exportStudentsBtn"><i data-icon="download"></i> Export</button>
         </div>
         <div class="table-wrap">
           <table class="data-table">
@@ -111,13 +112,13 @@
           <label class="division-filter" for="groupDivisionFilter">Division
             <select id="groupDivisionFilter" title="Show groups of one division (CC1, CC2, CC3 …)"></select>
           </label>
-          <button class="btn btn--danger" id="deleteAllGroupsBtn" style="display:none;">Delete All</button>
-          <button class="btn btn--ghost" id="importGroupsBtn">Import CSV</button>
-          <button class="btn btn--primary" id="addGroupBtn">+ Add Group</button>
+          <button class="btn btn--danger" id="deleteAllGroupsBtn" style="display:none;"><i data-icon="trash-2"></i> Delete All</button>
+          <button class="btn btn--ghost" id="importGroupsBtn"><i data-icon="upload"></i> Import CSV</button>
+          <button class="btn btn--primary" id="addGroupBtn"><i data-icon="plus"></i> Add Group</button>
         </div>
       </div>
       <div class="filter-bar">
-        <input type="search" id="groupSearch" aria-label="Search groups" placeholder="Search by group, leader, project, member name or enrollment no..." autocomplete="off">
+        <span class="search-box"><i data-icon="search"></i><input type="search" id="groupSearch" aria-label="Search groups" placeholder="Search by group, leader, project, member name or enrollment no..." autocomplete="off"></span>
         <span class="faint" id="groupSearchCount" role="status" style="font-size:12.5px;"></span>
       </div>
       <div class="card-grid" id="groupsGrid"></div>
@@ -127,7 +128,7 @@
     <section class="view" id="view-projects">
       <div class="topbar">
         <div><h1>Projects</h1><div class="topbar__sub">Manage all academic projects</div></div>
-        <div class="topbar__actions"><button class="btn btn--primary" id="addProjectBtn">+ Create Project</button></div>
+        <div class="topbar__actions"><button class="btn btn--primary" id="addProjectBtn"><i data-icon="plus"></i> Create Project</button></div>
       </div>
       <div class="card-grid" id="projectsGrid"></div>
     </section>
@@ -137,13 +138,13 @@
       <div class="topbar">
         <div><h1>Marks</h1><div class="topbar__sub">Continuous Assessment (50 marks: each head is marked out of 20 and scaled down) + Finals (50 marks, held after the CA).</div></div>
         <div class="topbar__actions">
-          <button class="btn btn--ghost" id="releaseAllMarksBtn" title="Release all marks to students">📢 Release All Marks</button>
-          <button class="btn btn--primary" id="addGroupMarksBtn">+ Add Group Marks</button>
+          <button class="btn btn--ghost" id="releaseAllMarksBtn" title="Release all marks to students"><i data-icon="megaphone"></i> Release All Marks</button>
+          <button class="btn btn--primary" id="addGroupMarksBtn"><i data-icon="plus"></i> Add Group Marks</button>
         </div>
       </div>
       <div class="section">
         <div class="filter-bar">
-          <input type="search" id="marksSearch" placeholder="Search by enrollment no...">
+          <span class="search-box"><i data-icon="search"></i><input type="search" id="marksSearch" placeholder="Search by enrollment no..."></span>
           <select id="marksSectionFilter"></select>
         </div>
         <div class="table-wrap">
@@ -159,7 +160,7 @@
     <section class="view" id="view-presentations">
       <div class="topbar">
         <div><h1>Presentations</h1><div class="topbar__sub">Schedule and manage group presentations</div></div>
-        <div class="topbar__actions"><button class="btn btn--primary" id="addPresentationBtn">+ Schedule</button></div>
+        <div class="topbar__actions"><button class="btn btn--primary" id="addPresentationBtn"><i data-icon="calendar-clock"></i> Schedule</button></div>
       </div>
       <div class="section">
         <div class="table-wrap">
@@ -199,17 +200,17 @@
       </div>
 
       <div class="section">
-        <div class="section__head"><h3>Exam Submissions</h3><span class="faint" id="examCountLabel" style="font-size:12.5px;"></span></div>
+        <div class="section__head"><h3><i data-icon="file-check"></i> Exam Submissions</h3><span class="faint" id="examCountLabel" style="font-size:12.5px;"></span></div>
         <div class="filter-bar" id="examTabs" style="gap:8px;">
           <button class="btn btn--primary btn--sm" data-exam="TA1">TA1</button>
           <button class="btn btn--ghost btn--sm" data-exam="TA2">TA2</button>
           <button class="btn btn--ghost btn--sm" data-exam="EndSem">End Sem</button>
         </div>
         <div class="filter-bar" id="examDeadlineBar" style="gap:8px; align-items:center;">
-          <label for="examDeadlineInput" style="font-size:12.5px; font-weight:600;">⏰ Deadline</label>
+          <label for="examDeadlineInput" style="font-size:12.5px; font-weight:600;" class="icon-label"><i data-icon="alarm-clock"></i> Deadline</label>
           <input type="datetime-local" id="examDeadlineInput">
-          <button class="btn btn--primary btn--sm" id="saveExamDeadlineBtn">Set Deadline</button>
-          <button class="btn btn--ghost btn--sm" id="clearExamDeadlineBtn">Remove</button>
+          <button class="btn btn--primary btn--sm" id="saveExamDeadlineBtn"><i data-icon="check"></i> Set Deadline</button>
+          <button class="btn btn--ghost btn--sm" id="clearExamDeadlineBtn"><i data-icon="x"></i> Remove</button>
           <span class="faint" id="examDeadlineStatus" style="font-size:12.5px;"></span>
         </div>
         <div class="table-wrap">
@@ -244,7 +245,7 @@
     <section class="view" id="view-notifications">
       <div class="topbar">
         <div><h1>Notifications</h1><div class="topbar__sub">Broadcast updates to students</div></div>
-        <div class="topbar__actions"><button class="btn btn--primary" id="addNotificationBtn">+ Create</button></div>
+        <div class="topbar__actions"><button class="btn btn--primary" id="addNotificationBtn"><i data-icon="plus"></i> Create</button></div>
       </div>
       <div class="section" id="notificationsList"></div>
     </section>
@@ -253,7 +254,7 @@
     <section class="view" id="view-announcements">
       <div class="topbar">
         <div><h1>Announcements</h1><div class="topbar__sub">Department-wide announcements</div></div>
-        <div class="topbar__actions"><button class="btn btn--primary" id="addAnnouncementBtn">+ Create</button></div>
+        <div class="topbar__actions"><button class="btn btn--primary" id="addAnnouncementBtn"><i data-icon="plus"></i> Create</button></div>
       </div>
       <div class="section" id="announcementsList"></div>
     </section>
@@ -262,7 +263,7 @@
     <section class="view" id="view-profile">
       <div class="topbar">
         <div><h1>My Profile</h1><div class="topbar__sub">Manage your faculty profile</div></div>
-        <div class="topbar__actions"><button class="btn btn--ghost" id="editFacultyProfileBtn">Edit ✎</button></div>
+        <div class="topbar__actions"><button class="btn btn--ghost" id="editFacultyProfileBtn"><i data-icon="pencil"></i> Edit</button></div>
       </div>
       <div class="section" id="facultyProfileCard"></div>
     </section>
@@ -271,13 +272,14 @@
     <section class="view" id="view-activity">
       <div class="topbar">
         <div><h1>Activity Log</h1><div class="topbar__sub">Full audit trail of every change</div></div>
-        <div class="topbar__actions"><button class="btn btn--ghost" id="clearActivityBtn">Clear History</button></div>
+        <div class="topbar__actions"><button class="btn btn--ghost" id="clearActivityBtn"><i data-icon="trash-2"></i> Clear History</button></div>
       </div>
       <div class="section"><div class="activity-list" id="activityList"></div></div>
     </section>
   </main>
 </div>
 
+<script src="js/core/icons.js"></script>
 <script src="js/core/storage.js"></script>
 <script src="js/core/common.js"></script>
 <script src="js/core/auth.js"></script>

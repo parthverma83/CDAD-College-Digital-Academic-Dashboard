@@ -61,7 +61,7 @@ function drawGroups() {
   const delAllBtn = document.getElementById('deleteAllGroupsBtn');
   if (delAllBtn) {
     delAllBtn.style.display = groups.length && !words.length ? '' : 'none';
-    delAllBtn.textContent = groupDivisionFilter === 'ALL' ? 'Delete All' : `Delete ${groupDivisionFilter === '__NONE__' ? 'No division' : groupDivisionFilter} (${groups.length})`;
+    delAllBtn.innerHTML = icon('trash-2') + ' ' + escapeHtml(groupDivisionFilter === 'ALL' ? 'Delete All' : `Delete ${groupDivisionFilter === '__NONE__' ? 'No division' : groupDivisionFilter} (${groups.length})`);
   }
   host.innerHTML = groups.length ? groups.map((g) => `
     <div class="card">
@@ -73,15 +73,15 @@ function drawGroups() {
         <span class="badge ${statusBadgeClass(g.status)}">${escapeHtml(g.status)}</span>
       </div>
       <div class="card__meta">${memberCount(g)} member(s) &middot; Project: ${escapeHtml(g.project || '—')}</div>
-      ${(matched.get(g.displayId) || []).map((id) => `<div class="card__meta">🔍 ${escapeHtml(names.get(id) || '')} <span class="mono">${escapeHtml(id)}</span></div>`).join('')}
+      ${(matched.get(g.displayId) || []).map((id) => `<div class="card__meta icon-label">${icon('search')} ${escapeHtml(names.get(id) || '')} <span class="mono">${escapeHtml(id)}</span></div>`).join('')}
       <div>
         <div class="card__progress-label"><span>Progress</span><span>${g.progress || 0}%</span></div>
         <div class="bar-track"><div class="bar-fill" style="width:${g.progress || 0}%"></div></div>
       </div>
       <div class="card__actions">
-        <button class="btn btn--ghost btn--sm" data-edit-group="${g.id}">Edit ✎</button>
-        <button class="btn btn--ghost btn--sm" data-view-group="${g.displayId}">Members</button>
-        <button class="btn btn--danger btn--sm" data-del-group="${g.id}">Delete</button>
+        <button class="btn btn--ghost btn--sm" data-edit-group="${g.id}">${icon('pencil')} Edit</button>
+        <button class="btn btn--ghost btn--sm" data-view-group="${g.displayId}">${icon('users')} Members</button>
+        <button class="btn btn--danger btn--sm" data-del-group="${g.id}">${icon('trash-2')} Delete</button>
       </div>
     </div>`).join('') : emptyState(words.length && inDivision.length ? 'No groups match your search.' : allGroupsList.length ? 'No groups in this division yet.' : 'No groups yet. Add one to get started.');
 
@@ -177,7 +177,7 @@ function openImportGroupsModal() {
   const list = (items, max = 8) => items.slice(0, max).map(escapeHtml).join(', ') + (items.length > max ? ', …' : '');
   openModal('Import Groups from CSV', `
     <p class="field-hint" style="margin-bottom:10px;">Upload a CSV with one row per group. Columns: <strong>Group Name</strong> (required), <strong>Leader</strong>, <strong>Members</strong> (enrollment numbers separated by ; or spaces), <strong>Status</strong> and <strong>Division</strong> (e.g. CC1) — the last four are optional. A student roster with Enrollment No. and Group Name columns also works (the students must already exist; to add missing students too, use Students → Import CSV). If Division is blank it is read from the group name (CC1-G1 → CC1). A group is skipped if its name already exists in the same division, and a student who is already in a group is not moved.</p>
-    <p style="margin-bottom:14px;"><button type="button" class="btn btn--ghost btn--sm" id="groupsTemplateBtn">⬇ Download template</button></p>
+    <p style="margin-bottom:14px;"><button type="button" class="btn btn--ghost btn--sm" id="groupsTemplateBtn">${icon('download')} Download template</button></p>
     <div class="field full" style="margin-bottom:14px;">
       <label>Division for imported groups</label>
       <input id="groupsImportDivision" list="groupsImportDivList" placeholder="e.g. CC1 (used for rows with no Division column value)" autocomplete="off" value="${groupDivisionFilter !== 'ALL' && groupDivisionFilter !== '__NONE__' ? escapeHtml(groupDivisionFilter) : ''}">
@@ -190,7 +190,7 @@ function openImportGroupsModal() {
     <div id="groupsImportPreview" style="margin-bottom:14px;"></div>
     <div class="form-actions">
       <button type="button" class="btn btn--ghost" id="cancelGroupsImport">Cancel</button>
-      <button type="button" class="btn btn--primary" id="confirmGroupsImport" disabled>Import Groups</button>
+      <button type="button" class="btn btn--primary" id="confirmGroupsImport" disabled>${icon('upload')} Import Groups</button>
     </div>
   `, {
     onMount: () => {
@@ -313,7 +313,7 @@ function groupFormModal(title, group) {
         </div>
         <div class="form-actions">
           <button type="button" class="btn btn--ghost" id="cancelGroupForm">Cancel</button>
-          <button type="submit" class="btn btn--primary">Save Changes</button>
+          <button type="submit" class="btn btn--primary">${icon('save')} Save Changes</button>
         </div>
       </form>
     `, {
@@ -386,11 +386,11 @@ async function openGroupMembersModal(displayId) {
       const t = cur ? deriveMarkTotals(cur) : null;
       return `<div class="list-item"><div class="list-item__top">
         <span>${s ? escapeHtml(s.name) : m} <span class="mono faint">${escapeHtml(m)}</span>${t ? ` <span class="badge badge--info">${t.total}/${t.max}</span>` : ''}</span>
-        <button class="btn btn--ghost btn--sm" data-remove-member="${m}">Remove</button>
+        <button class="btn btn--ghost btn--sm" data-remove-member="${m}">${icon('user-minus')} Remove</button>
       </div>
       <div style="display:flex;gap:16px;margin-top:8px;flex-wrap:wrap;">${MARK_BOXES.map((h) => headInput(m, h)).join('')}</div></div>`;
     }).join('') || emptyState('No members yet.')}
-    ${members.length ? `<div class="form-actions"><button type="button" class="btn btn--primary" id="saveGroupMarks">Save marks</button></div>` : ''}
+    ${members.length ? `<div class="form-actions"><button type="button" class="btn btn--primary" id="saveGroupMarks">${icon('save')} Save marks</button></div>` : ''}
   `, {
     onMount: () => {
       const saveBtn = document.getElementById('saveGroupMarks');

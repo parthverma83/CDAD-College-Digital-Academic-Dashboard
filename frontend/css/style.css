@@ -339,3 +339,38 @@ img { max-width: 100%; display: block; }
   border-radius: var(--radius-sm); padding: 10px 12px; line-height: 1.6; text-align: center;
 }
 .login-footer { text-align: center; margin-top: 24px; font-size: 11.5px; color: var(--ink-faint); }
+
+/* ---------------- Icons (Lucide, js/core/icons.js) ---------------- */
+.icon {
+  width: 1.2em; height: 1.2em; flex-shrink: 0; vertical-align: -0.22em;
+  fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round;
+}
+.nav-link__icon { display: inline-flex; align-items: center; justify-content: center; }
+.nav-link__icon .icon { width: 17px; height: 17px; display: block; }
+.sidebar__mark { color: #fff; }
+.sidebar__mark .icon { width: 21px; height: 21px; }
+.icon-btn .icon { width: 18px; height: 18px; }
+.btn--sm:has(> .icon) { padding-left: 8px; padding-right: 9px; gap: 4px; }
+.btn--sm > .icon { width: 1.15em; height: 1.15em; }
+.icon-label { display: inline-flex; align-items: center; gap: 6px; }
+.section__head h3 { display: inline-flex; align-items: center; gap: 8px; }
+.section__head h3 .icon { color: var(--blue); }
+.stat-card__icon .icon { width: 21px; height: 21px; }
+.notif-mini__icon .icon { width: 15px; height: 15px; }
+.check-dot .icon { width: 11px; height: 11px; stroke-width: 3.5; }
+.empty-state__icon .icon { width: 34px; height: 34px; stroke-width: 1.5; }
+.modal__close .icon { width: 18px; height: 18px; display: block; }
+.toast { display: flex; align-items: center; gap: 9px; }
+.toast--success .icon { color: var(--green); }
+.toast--error .icon { color: #fca5a5; }
+.role-switch button { display: inline-flex; align-items: center; gap: 6px; }
+/* Icon inside a text field */
+.input-icon, .search-box { position: relative; display: block; }
+.search-box { flex: 1; min-width: 200px; }
+.input-icon > .icon, .search-box > .icon {
+  position: absolute; left: 13px; top: 50%; transform: translateY(-50%);
+  width: 16px; height: 16px; color: var(--ink-faint); pointer-events: none;
+}
+.login-field .input-icon input { padding-left: 38px; }
+.login-field .login-field-password input { padding-right: 42px; }
+.filter-bar .search-box input[type="search"] { width: 100%; padding-left: 36px; }

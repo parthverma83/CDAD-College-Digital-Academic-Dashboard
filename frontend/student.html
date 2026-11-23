@@ -9,32 +9,33 @@
   <link rel="stylesheet" href="css/dashboard.css">
   <link rel="stylesheet" href="css/forms.css">
   <link rel="stylesheet" href="css/responsive.css">
+<link rel="icon" type="image/svg+xml" href="favicon.svg">
 </head>
 
 <body>
   <div class="app-shell">
     <aside class="sidebar">
       <div class="sidebar__brand">
-        <div class="sidebar__mark">🎓</div>
+        <div class="sidebar__mark"><i data-icon="graduation-cap"></i></div>
         <div class="sidebar__brand-text"><strong>CDAD</strong><span>Student Portal</span></div>
       </div>
-      <button class="nav-link active" data-view="overview"><span class="nav-link__icon">▣</span> Dashboard</button>
-      <button class="nav-link" data-view="profile"><span class="nav-link__icon">●</span> My Profile</button>
-      <button class="nav-link" data-view="group"><span class="nav-link__icon">▦</span> My Group</button>
-      <button class="nav-link" data-view="creategroup"><span class="nav-link__icon">➕</span> Create Group</button>
-      <button class="nav-link" data-view="project"><span class="nav-link__icon">◧</span> My Project</button>
-      <button class="nav-link" data-view="progress"><span class="nav-link__icon">◔</span> Progress</button>
-      <button class="nav-link" data-view="submission"><span class="nav-link__icon">☑</span> Submission</button>
-      <button class="nav-link" data-view="github"><span class="nav-link__icon">⌥</span> GitHub</button>
-      <button class="nav-link" data-view="marks"><span class="nav-link__icon">▤</span> Marks</button>
-      <button class="nav-link" data-view="presentation"><span class="nav-link__icon">◈</span> Presentation</button>
-      <button class="nav-link" data-view="peers"><span class="nav-link__icon">◎</span> Connect</button>
-      <button class="nav-link" data-view="requests"><span class="nav-link__icon">✎</span> Requests</button>
-      <button class="nav-link" data-view="announcements"><span class="nav-link__icon">✉</span> Announcements</button>
-      <button class="nav-link" data-view="notifications"><span class="nav-link__icon">◔</span> Notifications <span
+      <button class="nav-link active" data-view="overview"><span class="nav-link__icon"><i data-icon="layout-dashboard"></i></span> Dashboard</button>
+      <button class="nav-link" data-view="profile"><span class="nav-link__icon"><i data-icon="circle-user-round"></i></span> My Profile</button>
+      <button class="nav-link" data-view="group"><span class="nav-link__icon"><i data-icon="users-round"></i></span> My Group</button>
+      <button class="nav-link" data-view="creategroup"><span class="nav-link__icon"><i data-icon="circle-plus"></i></span> Create Group</button>
+      <button class="nav-link" data-view="project"><span class="nav-link__icon"><i data-icon="folder-kanban"></i></span> My Project</button>
+      <button class="nav-link" data-view="progress"><span class="nav-link__icon"><i data-icon="list-checks"></i></span> Progress</button>
+      <button class="nav-link" data-view="submission"><span class="nav-link__icon"><i data-icon="file-check"></i></span> Submission</button>
+      <button class="nav-link" data-view="github"><span class="nav-link__icon"><i data-icon="folder-git-2"></i></span> GitHub</button>
+      <button class="nav-link" data-view="marks"><span class="nav-link__icon"><i data-icon="award"></i></span> Marks</button>
+      <button class="nav-link" data-view="presentation"><span class="nav-link__icon"><i data-icon="presentation"></i></span> Presentation</button>
+      <button class="nav-link" data-view="peers"><span class="nav-link__icon"><i data-icon="handshake"></i></span> Connect</button>
+      <button class="nav-link" data-view="requests"><span class="nav-link__icon"><i data-icon="inbox"></i></span> Requests</button>
+      <button class="nav-link" data-view="announcements"><span class="nav-link__icon"><i data-icon="megaphone"></i></span> Announcements</button>
+      <button class="nav-link" data-view="notifications"><span class="nav-link__icon"><i data-icon="bell"></i></span> Notifications <span
           class="nav-link__badge" id="sidebarNotifBadge" style="display:none;"></span></button>
       <div class="sidebar__footer">
-        <button class="logout-btn" id="logoutBtn"><span class="nav-link__icon">⏻</span> Logout</button>
+        <button class="logout-btn" id="logoutBtn"><span class="nav-link__icon"><i data-icon="log-out"></i></span> Logout</button>
       </div>
     </aside>
 
@@ -44,11 +45,11 @@
         <div class="topbar">
           <div>
             <h1>Dashboard</h1>
-            <div class="topbar__sub" id="welcomeMsg">Welcome back 👋</div>
+            <div class="topbar__sub" id="welcomeMsg">Welcome back</div>
           </div>
           <div class="topbar__utility">
             <button class="icon-btn" id="bellBtn" title="Notifications" onclick="showView('notifications')">
-              🔔<span class="icon-btn__badge" id="notifBadge" style="display:none;"></span>
+              <i data-icon="bell"></i><span class="icon-btn__badge" id="notifBadge" style="display:none;"></span>
             </button>
             <div class="topbar-user" id="topbarUser"></div>
           </div>
@@ -197,6 +198,7 @@
     </main>
   </div>
 
+  <script src="js/core/icons.js"></script>
   <script src="js/core/storage.js"></script>
   <script src="js/core/common.js"></script>
   <script src="js/core/auth.js"></script>
