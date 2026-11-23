@@ -18,19 +18,49 @@ function renderDivisionFilter(groups) {
     + divisions.map((d) => `<option value="${escapeHtml(d)}">${escapeHtml(d)} (${groups.filter((g) => g.division === d).length})</option>`).join('')
     + (noDivision && divisions.length ? `<option value="__NONE__">No division (${noDivision})</option>` : '');
   sel.value = groupDivisionFilter;
-  sel.onchange = () => { groupDivisionFilter = sel.value; renderGroups(); };
+  sel.onchange = () => { groupDivisionFilter = sel.value; drawGroups(); };
 }
 
+/* Last loaded data, so typing in the search box filters instantly without asking the server again. */
+let groupsPageData = { groups: [], names: new Map() };
+
 async function renderGroups() {
+  if (!document.getElementById('groupsGrid')) return;
+  const [groups, students] = await Promise.all([allGroups(), getData(CDAD_KEYS.STUDENTS)]);
+  groupsPageData = { groups, names: new Map(students.map((s) => [s.displayId, s.name])) };
+  const search = document.getElementById('groupSearch');
+  if (search && !search.dataset.wired) {
+    search.dataset.wired = '1';
+    search.addEventListener('input', drawGroups);
+  }
+  drawGroups();
+}
+
+/** Every word typed must appear in the group itself (name, ID, division, leader, project) or in one of its members.
+    Returns null for no match, else the members that matched (shown on the card so it's clear why it's listed). */
+function matchGroup(g, words, names) {
+  const person = (id) => `${id} ${names.get(id) || ''}`.toLowerCase();
+  const own = [g.name, g.displayId, g.division, g.project, g.teamLeader ? person(g.teamLeader) : ''].join(' ').toLowerCase();
+  if (words.every((w) => own.includes(w))) return [];
+  const members = (g.members || []).filter((id) => words.every((w) => own.includes(w) || person(id).includes(w)));
+  return members.length ? members : null;
+}
+
+function drawGroups() {
   const host = document.getElementById('groupsGrid');
   if (!host) return;
-  const allGroupsList = await allGroups();
+  const { groups: allGroupsList, names } = groupsPageData;
   renderDivisionFilter(allGroupsList);
-  const groups = allGroupsList.filter((g) => groupDivisionFilter === 'ALL' || (groupDivisionFilter === '__NONE__' ? !g.division : g.division === groupDivisionFilter));
-  // "Delete All" acts on what's currently listed: everything, or just the selected division.
+  const inDivision = allGroupsList.filter((g) => groupDivisionFilter === 'ALL' || (groupDivisionFilter === '__NONE__' ? !g.division : g.division === groupDivisionFilter));
+  const words = (document.getElementById('groupSearch')?.value || '').toLowerCase().split(/\s+/).filter(Boolean);
+  const matched = new Map(inDivision.map((g) => [g.displayId, matchGroup(g, words, names)]));
+  const groups = inDivision.filter((g) => matched.get(g.displayId) !== null);
+  const countLabel = document.getElementById('groupSearchCount');
+  if (countLabel) countLabel.textContent = words.length ? `${groups.length} of ${inDivision.length} groups` : '';
+  // "Delete All" removes everything in the selected division, not just search results — so it's hidden while searching.
   const delAllBtn = document.getElementById('deleteAllGroupsBtn');
   if (delAllBtn) {
-    delAllBtn.style.display = groups.length ? '' : 'none';
+    delAllBtn.style.display = groups.length && !words.length ? '' : 'none';
     delAllBtn.textContent = groupDivisionFilter === 'ALL' ? 'Delete All' : `Delete ${groupDivisionFilter === '__NONE__' ? 'No division' : groupDivisionFilter} (${groups.length})`;
   }
   host.innerHTML = groups.length ? groups.map((g) => `
@@ -43,6 +73,7 @@ async function renderGroups() {
         <span class="badge ${statusBadgeClass(g.status)}">${escapeHtml(g.status)}</span>
       </div>
       <div class="card__meta">${memberCount(g)} member(s) &middot; Project: ${escapeHtml(g.project || '—')}</div>
+      ${(matched.get(g.displayId) || []).map((id) => `<div class="card__meta">🔍 ${escapeHtml(names.get(id) || '')} <span class="mono">${escapeHtml(id)}</span></div>`).join('')}
       <div>
         <div class="card__progress-label"><span>Progress</span><span>${g.progress || 0}%</span></div>
         <div class="bar-track"><div class="bar-fill" style="width:${g.progress || 0}%"></div></div>
@@ -52,7 +83,7 @@ async function renderGroups() {
         <button class="btn btn--ghost btn--sm" data-view-group="${g.displayId}">Members</button>
         <button class="btn btn--danger btn--sm" data-del-group="${g.id}">Delete</button>
       </div>
-    </div>`).join('') : emptyState(allGroupsList.length ? 'No groups in this division yet.' : 'No groups yet. Add one to get started.');
+    </div>`).join('') : emptyState(words.length && inDivision.length ? 'No groups match your search.' : allGroupsList.length ? 'No groups in this division yet.' : 'No groups yet. Add one to get started.');
 
   host.querySelectorAll('[data-edit-group]').forEach((b) => b.addEventListener('click', () => openEditGroupModal(b.dataset.editGroup)));
   host.querySelectorAll('[data-view-group]').forEach((b) => b.addEventListener('click', () => openGroupMembersModal(b.dataset.viewGroup)));
