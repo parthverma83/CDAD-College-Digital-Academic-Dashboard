@@ -244,6 +244,54 @@ test('presentations: bulk scheduling for many groups at once', async () => {
   assert.equal(dup.data.created, 1);
 });
 
+test('marks: release only for students who completed their tasks', async () => {
+  const fac = await login('faculty', 'FAC001', 'faculty123');
+  const leader = await login('student', 'ADT24SOCB0001', 'PASS123');
+  const loner = await login('student', 'ADT24SOCB0020', 'PASS123');
+  const go = (json, jar = fac) => api('POST', '/marks/release-completed', { jar, json });
+  await api('POST', '/marks/release-all', { jar: fac, json: { released: false } });
+  assert.equal((await go({ require: ['TA1'] }, leader)).status, 401);
+  assert.equal((await go({ require: [] })).status, 400);
+  assert.equal((await go({ require: ['constructor'] })).status, 400);
+  assert.equal((await go({ require: ['TA1'], section: 5 })).status, 400);
+
+  // nobody has submitted TA2 yet
+  let r = await go({ require: ['TA2', 'ca'], preview: true });
+  assert.equal(r.data.toRelease.length, 0);
+  assert.deepEqual(r.data.incomplete.find((s) => s.studentId === 'ADT24SOCB0001').missing, ['TA2']);
+  assert.ok(r.data.incomplete.find((s) => s.studentId === 'ADT24SOCB0020').missing.includes('No marks entered'));
+  ok(await api('POST', '/exam-submissions/TA2', { jar: leader, form: (() => { const f = new FormData(); f.append('link', 'https://example.com'); return f; })() }), 'submit TA2');
+  // a student outside the group has full marks but none of the group's work
+  ok(await api('PUT', '/marks/student/ADT24SOCB0020', { jar: fac, json: { jury1: 1, jury2: 1, assess3: 1, assign1: 1 } }), 'marks');
+
+  r = await go({ require: ['TA2', 'ca'], preview: true });
+  assert.deepEqual(r.data.toRelease.map((s) => s.studentId), ['ADT24SOCB0001', 'ADT24SOCB0002', 'ADT24SOCB0820']);
+  assert.equal(r.data.released, 0);
+  assert.deepEqual((await api('GET', '/marks', { jar: leader })).data, [], 'preview releases nothing');
+  assert.equal((await go({ require: ['TA2', 'ca'], section: 'NOPE', preview: true })).data.toRelease.length, 0);
+  assert.ok((await go({ require: ['TA2', 'finals'], preview: true })).data.incomplete.every((s) => s.missing.length));
+
+  r = await go({ require: ['TA2', 'ca'] });
+  assert.equal(r.data.released, 3);
+  assert.equal((await api('GET', '/marks', { jar: leader })).data.length, 3);
+  assert.deepEqual((await api('GET', '/marks', { jar: loner })).data, [], 'incomplete student still cannot see marks');
+  r = await go({ require: ['TA2', 'ca'] }); // again: nothing new, nothing hidden
+  assert.equal(r.data.released, 0);
+  assert.equal(r.data.alreadyReleased, 3);
+  await go({ require: ['finals'] });
+  assert.equal((await api('GET', '/marks', { jar: leader })).data.length, 3, 'never hides released marks');
+
+  // project approval is its own task, separate from exams
+  const p01 = (await api('GET', '/projects', { jar: fac })).data.find((p) => p.group === 'G01');
+  ok(await api('PUT', `/projects/${p01.id}/submission/review`, { jar: fac, json: { decision: 'Rejected' } }), 'reject');
+  assert.ok((await go({ require: ['projectApproved'], preview: true })).data.incomplete.some((s) => s.studentId === 'ADT24SOCB0001'));
+  ok(await api('PUT', `/projects/${p01.id}/submission/review`, { jar: fac, json: { decision: 'Approved' } }), 'approve');
+  assert.ok(!(await go({ require: ['projectApproved', 'projectSubmitted'], preview: true })).data.incomplete.some((s) => s.studentId === 'ADT24SOCB0001'));
+  const exams = (await api('GET', '/exam-submissions', { jar: fac })).data.submissions;
+  assert.ok(!exams.some((s) => s.exam === 'TA1'), 'a project submission never counts as TA1');
+  for (const s of exams) await api('DELETE', `/exam-submissions/${s.id}`, { jar: fac });
+});
+
 test('requests, announcements, notifications, activity', async () => {
   const fac = await login('faculty', 'FAC001', 'faculty123');
   const stu = await login('student', 'ADT24SOCB0002', 'PASS123');

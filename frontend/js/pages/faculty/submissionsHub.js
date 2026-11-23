@@ -126,10 +126,10 @@ async function renderExamSubmissions() {
     const s = byGroup.get(g.displayId);
     const project = projects.find((p) => p.group === g.displayId);
     const head = `<td><div class="row-name__text"><strong>${escapeHtml(g.name)}</strong><span class="mono">${escapeHtml(g.displayId)}</span></div></td>
-      <td>${escapeHtml(project ? project.title : '—')}</td>`;
-    if (!s) return `<tr>${head}<td colspan="4"><span class="badge badge--warn">Not submitted</span></td><td></td></tr>`;
+      <td>${escapeHtml(project ? project.title : '—')}${project ? projectSubmissionBadge(project) : ''}</td>`;
+    if (!s) return `<tr>${head}<td colspan="4"><span class="badge badge--warn">${EXAM_LABELS[currentExam]} not submitted</span></td><td></td></tr>`;
     return `<tr>${head}
-      <td>${escapeHtml(s.submittedByName || s.submittedBy)}<div class="faint mono" style="font-size:11px;">${escapeHtml(s.submittedBy)}</div></td>
+      <td><div style="margin-bottom:4px;"><span class="badge badge--good">${EXAM_LABELS[currentExam]} submitted</span></div>${escapeHtml(s.submittedByName || s.submittedBy)}<div class="faint mono" style="font-size:11px;">${escapeHtml(s.submittedBy)}</div></td>
       <td>${formatDateTime(s.submittedAt)}</td>
       <td class="table-actions">
         ${s.link ? `<a class="btn btn--ghost btn--sm" href="${escapeHtml(s.link)}" target="_blank" rel="noopener">${icon('external-link')} Open Link</a>` : ''}
@@ -148,6 +148,14 @@ async function renderExamSubmissions() {
       await renderExamSubmissions();
     });
   }));
+}
+
+/** The final project submission is separate from TA1 / TA2 / End Sem, so it gets its own label. */
+function projectSubmissionBadge(project) {
+  const status = project.submission ? project.submission.status : '';
+  if (!status) return '';
+  const cls = status === 'Approved' ? 'badge--good' : status === 'Rejected' ? 'badge--bad' : 'badge--info';
+  return `<div style="margin-top:4px;"><span class="badge ${cls}" title="Final project submission (separate from exam submissions)">Project: ${escapeHtml(status)}</span></div>`;
 }
 
 function submissionHubRow(p) {

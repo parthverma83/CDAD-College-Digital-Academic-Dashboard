@@ -70,6 +70,16 @@ async function releaseAllMarks(released = true) {
   return res.ok ? res.json() : null;
 }
 
+/** Releases marks for students who finished every task in `require`. preview: true only reports who would get them. */
+async function releaseCompletedMarks({ require, section, preview }) {
+  const res = await fetch('/api/marks/release-completed', {
+    method: 'POST', credentials: 'include',
+    headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ require, section, preview })
+  });
+  const body = await res.json().catch(() => ({}));
+  return res.ok ? body : { error: body.error || 'Could not check the students.' };
+}
+
 async function setMarksReleased(id, released) {
   const res = await fetch(`/api/marks/${id}/release`, {
     method: 'POST', credentials: 'include',

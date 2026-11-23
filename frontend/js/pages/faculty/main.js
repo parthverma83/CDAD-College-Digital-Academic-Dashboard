@@ -63,6 +63,7 @@ function wireStaticButtons() {
     addStudentBtn: openAddStudentModal,
     addGroupMarksBtn: openGroupMarksModal,
     releaseAllMarksBtn: confirmReleaseAllMarks,
+    releaseCompletedBtn: openReleaseCompletedModal,
     importStudentsBtn: () => openImportStudentsModal(),
     assignSectionBtn: openAssignSectionModal,
     importSectionBtn: () => openImportStudentsModal({ bySection: true }),

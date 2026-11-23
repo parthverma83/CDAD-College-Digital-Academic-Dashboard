@@ -89,6 +89,80 @@ function confirmReleaseAllMarks() {
   });
 }
 
+/* Release only for students who have completed their tasks. The list updates as tasks are ticked;
+   nothing is released until the button is pressed. [key, label, ticked by default] */
+const COMPLETION_TASKS = [
+  ['TA1', 'TA1 submitted', true], ['TA2', 'TA2 submitted', true], ['EndSem', 'End Sem submitted', true],
+  ['projectSubmitted', 'Project submitted', false], ['projectApproved', 'Project approved', true],
+  ['ca', 'All four CA marks entered', true], ['finals', 'Finals marks entered', false]
+];
+
+function openReleaseCompletedModal() {
+  const pageFilter = document.getElementById('marksSectionFilter');
+  openModal('Release Marks — Completed Students', `
+    <p class="confirm-text">Marks are released only to students who have completed <strong>every</strong> task ticked below. Exam and project work counts for the whole group.</p>
+    <form id="releaseCompletedForm">
+      <div class="checkbox-grid">
+        ${COMPLETION_TASKS.map(([key, label, on]) => `<label class="checkbox-row"><input type="checkbox" name="task" value="${key}" ${on ? 'checked' : ''}> ${label}</label>`).join('')}
+      </div>
+      <div class="field" style="margin-top:14px;"><label>Section</label><select name="section">${pageFilter.innerHTML}</select></div>
+      <div id="releaseCompletedPreview" role="status" style="margin-top:14px; min-height:60px;"></div>
+      <div class="form-actions">
+        <button type="button" class="btn btn--ghost" id="cancelReleaseCompleted">Cancel</button>
+        <button type="submit" class="btn btn--primary" id="releaseCompletedSubmit" disabled>${icon('circle-check')} Release</button>
+      </div>
+    </form>`, {
+    onMount: () => {
+      const form = document.getElementById('releaseCompletedForm');
+      const panel = document.getElementById('releaseCompletedPreview');
+      const submit = document.getElementById('releaseCompletedSubmit');
+      form.section.value = pageFilter.value;
+      const choice = () => ({
+        require: [...form.querySelectorAll('input[name="task"]:checked')].map((c) => c.value),
+        section: form.section.value === '__all' ? undefined : form.section.value
+      });
+      const list = (rows, text) => rows.slice(0, 200).map((s) => `<div style="font-size:12.5px; padding:3px 0;"><strong>${escapeHtml(s.name)}</strong> <span class="mono faint">${escapeHtml(s.studentId)}</span>${text ? `<div class="faint">${escapeHtml(text(s))}</div>` : ''}</div>`).join('');
+      let turn = 0; // ignore answers that arrive after a newer choice was made
+      const refresh = async () => {
+        const mine = ++turn;
+        submit.disabled = true;
+        submit.innerHTML = `${icon('circle-check')} Release`;
+        const c = choice();
+        if (!c.require.length) { panel.innerHTML = '<span class="faint">Tick at least one task.</span>'; return; }
+        panel.innerHTML = '<span class="faint">Checking…</span>';
+        const r = await releaseCompletedMarks({ ...c, preview: true });
+        if (mine !== turn || !panel.isConnected) return;
+        if (r.error) { panel.innerHTML = `<span style="color:var(--red);">${escapeHtml(r.error)}</span>`; return; }
+        const n = r.toRelease.length;
+        submit.disabled = !n;
+        submit.innerHTML = `${icon('circle-check')} Release${n ? ` for ${n} student${n === 1 ? '' : 's'}` : ''}`;
+        panel.innerHTML = `
+          <div style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:8px;">
+            <span class="badge badge--good">${n} ready to release</span>
+            <span class="badge badge--muted">${r.alreadyReleased} already released</span>
+            <span class="badge badge--warn">${r.incomplete.length} incomplete</span>
+          </div>
+          ${n ? `<details open><summary>Ready to release</summary>${list(r.toRelease)}</details>` : '<p class="faint">No one new has completed all of these tasks.</p>'}
+          ${r.incomplete.length ? `<details><summary>Incomplete — what is missing</summary>${list(r.incomplete, (s) => s.missing.join(', '))}</details>` : ''}`;
+      };
+      form.addEventListener('change', refresh);
+      document.getElementById('cancelReleaseCompleted').addEventListener('click', closeModal);
+      form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        if (submit.disabled) return;
+        submit.disabled = true;
+        turn++;
+        const r = await releaseCompletedMarks(choice());
+        if (r.error) { showToast(r.error, 'error'); submit.disabled = false; return; }
+        closeModal();
+        showToast(`Marks released for ${r.released} student${r.released === 1 ? '' : 's'}`, 'success');
+        await renderAll();
+      });
+      refresh();
+    }
+  });
+}
+
 /** One box per Continuous Assessment head, each marked out of 20 (scaled down in the total). */
 function caInputsHtml(values, placeholder) {
   return CA_HEADS.map((h) => `

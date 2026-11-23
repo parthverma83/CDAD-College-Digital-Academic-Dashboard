@@ -112,6 +112,63 @@ router.post('/release-all', requireRole('faculty'), async (req, res) => {
   res.json({ ok: true, released: !!released, updated: Number(info.changes) });
 });
 
+/* Tasks that can be required before marks are released (see /release-completed). */
+const COMPLETION_TASKS = {
+  TA1: 'TA1', TA2: 'TA2', EndSem: 'End Sem', projectSubmitted: 'Project submission', projectApproved: 'Project approval',
+  ca: 'All four CA marks', finals: 'Finals marks'
+};
+
+/** Who has finished the required tasks? Group work (exams, project) counts for every member of the group. */
+async function completionReport(required, section) {
+  const [students, exams, projects] = await Promise.all([
+    db.prepare(`SELECT s.id, s.display_id, s.name, s.section, s.group_id, m.id AS marks_id, m.released,
+      m.jury1, m.jury2, m.assess3, m.assign1, m.finals
+      FROM students s LEFT JOIN marks m ON m.student_id = s.id ORDER BY s.display_id`).all(),
+    db.prepare('SELECT group_id, exam FROM exam_submissions').all(),
+    db.prepare('SELECT p.group_id, s.status FROM projects p JOIN submissions s ON s.project_id = p.id WHERE p.group_id IS NOT NULL').all()
+  ]);
+  const examDone = new Set(exams.map((e) => `${e.group_id}:${e.exam}`));
+  const projectStatus = new Map(projects.map((p) => [p.group_id, p.status]));
+  const done = (s, task) => {
+    if (task === 'ca') return HEADS.every((h) => s[h.key] != null);
+    if (task === 'finals') return s.finals != null;
+    if (task === 'projectSubmitted') return projectStatus.has(s.group_id);
+    if (task === 'projectApproved') return projectStatus.get(s.group_id) === 'Approved';
+    return examDone.has(`${s.group_id}:${task}`);
+  };
+  const complete = []; const incomplete = [];
+  for (const s of students) {
+    if (section !== undefined && (s.section || '') !== section) continue;
+    const missing = required.filter((t) => !done(s, t)).map((t) => COMPLETION_TASKS[t]);
+    if (!s.marks_id) missing.push('No marks entered');
+    (missing.length ? incomplete : complete).push({ studentId: s.display_id, name: s.name, marksId: s.marks_id, released: !!s.released, missing });
+  }
+  return { complete, incomplete };
+}
+
+/**
+ * Release marks only for students who have completed every required task.
+ * Body: { require: ['TA1', ...], section? (omit for all), preview? }. preview: true changes nothing.
+ * Never hides marks that are already released.
+ */
+router.post('/release-completed', requireRole('faculty'), async (req, res) => {
+  const { require: wanted, section, preview } = req.body || {};
+  const required = [...new Set(Array.isArray(wanted) ? wanted : [])];
+  if (!required.length) return res.status(400).json({ error: 'Choose at least one task that must be completed.' });
+  if (required.some((t) => !Object.hasOwn(COMPLETION_TASKS, t))) return res.status(400).json({ error: 'Unknown task.' });
+  if (section !== undefined && typeof section !== 'string') return res.status(400).json({ error: 'Invalid section.' });
+  const { complete, incomplete } = await completionReport(required, section);
+  const pending = complete.filter((s) => !s.released);
+  if (!preview && pending.length) {
+    await db.transaction(async () => {
+      for (const s of pending) await db.prepare('UPDATE marks SET released = 1 WHERE id = ?').run(s.marksId);
+    });
+    await logActivity(`Marks released for ${pending.length} student(s) who completed: ${required.map((t) => COMPLETION_TASKS[t]).join(', ')}`);
+  }
+  const strip = ({ marksId, ...s }) => s;
+  res.json({ released: preview ? 0 : pending.length, toRelease: pending.map(strip), alreadyReleased: complete.length - pending.length, incomplete: incomplete.map(strip) });
+});
+
 router.post('/:id/release', requireRole('faculty'), async (req, res) => {
   const row = await getRow(req.params.id);
   if (!row) return res.status(404).json({ error: 'Not found' });

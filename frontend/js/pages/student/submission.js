@@ -28,7 +28,7 @@ async function renderExamSubmissionCards(host, amLeader) {
   wrap.style.marginTop = '28px';
   wrap.innerHTML = `
     <h4 style="font-size:13.5px; margin-bottom:10px;">Exam Submissions</h4>
-    <p class="field-hint" style="margin-bottom:14px;">Submit your PPT, document or link for each exam${amLeader ? '' : ' — only your team leader can submit'}.</p>
+    <p class="field-hint" style="margin-bottom:14px;">Submit your PPT, document or link for each exam${amLeader ? '' : ' — only your team leader can submit'}. <strong>Submitting your final project above does not submit these.</strong></p>
     <div class="card-grid">
       ${exams.map((exam) => {
         const s = submissions.find((x) => x.exam === exam);
